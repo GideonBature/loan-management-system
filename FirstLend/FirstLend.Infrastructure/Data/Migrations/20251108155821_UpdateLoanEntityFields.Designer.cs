@@ -3,6 +3,7 @@ using System;
 using FirstLend.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstLend.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(FirstLendDbContext))]
-    partial class FirstLendDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251108155821_UpdateLoanEntityFields")]
+    partial class UpdateLoanEntityFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,9 +34,8 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.Property<decimal>("AmountDue")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("BorrowerId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("BorrowerId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -485,10 +487,10 @@ namespace FirstLend.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("FirstLend.Domain.Entities.Loan", b =>
                 {
-                    b.HasOne("FirstLend.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("FirstLend.Domain.Entities.User", "Borrower")
                         .WithMany()
                         .HasForeignKey("BorrowerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("FirstLend.Domain.Entities.LoanType", "LoanType")
@@ -496,6 +498,8 @@ namespace FirstLend.Infrastructure.Data.Migrations
                         .HasForeignKey("LoanTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Borrower");
 
                     b.Navigation("LoanType");
                 });

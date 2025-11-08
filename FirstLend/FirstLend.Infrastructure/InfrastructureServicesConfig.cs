@@ -1,4 +1,5 @@
 using FirstLend.Domain.Abstractions;
+using FirstLend.Application.Abstractions;
 using FirstLend.Infrastructure.Services;
 using FirstLend.Infrastructure.Data;
 using FirstLend.Infrastructure.Identity;
@@ -28,7 +29,9 @@ namespace FirstLend.Infrastructure
             .AddDefaultTokenProviders();
 
             // Register application services
-            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<FirstLend.Domain.Abstractions.IAuthService, AuthService>();
+            services.AddScoped<ILoanTypeService, LoanTypeService>();
+            services.AddScoped<ILoanService, LoanService>();
 
             return services;
         }

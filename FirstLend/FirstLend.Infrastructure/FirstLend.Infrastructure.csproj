@@ -24,6 +24,7 @@
   
   <ItemGroup>
     <ProjectReference Include="../FirstLend.Domain/FirstLend.Domain.csproj" />
+    <ProjectReference Include="../FirstLend.Application/FirstLend.Application.csproj" />
   </ItemGroup>
 
 </Project>

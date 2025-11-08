@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../FirstLend.Domain/FirstLend.Domain.csproj" />
-    <ProjectReference Include="../FirstLend.Infrastructure/FirstLend.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -20,5 +20,17 @@ namespace FirstLend.Infrastructure.Data
         public DbSet<PaymentHistory> PaymentHistories { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configure Loan -> ApplicationUser relationship
+            modelBuilder.Entity<Loan>()
+                .HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(l => l.BorrowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }
