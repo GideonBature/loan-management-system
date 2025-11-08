@@ -19,5 +19,6 @@ namespace FirstLend.Infrastructure.Data
         public DbSet<LoanType> LoanTypes { get; set; }
         public DbSet<PaymentHistory> PaymentHistories { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
     }
 }

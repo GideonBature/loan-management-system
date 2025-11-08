@@ -70,6 +70,7 @@ namespace FirstLend.Infrastructure.Services
                     PhoneNumber = request.Phone,
                     FirstName = request.FullName.Split(' ').FirstOrDefault() ?? "",
                     LastName = string.Join(" ", request.FullName.Split(' ').Skip(1)),
+                    Address = request.Address,
                     UserType = UserType.Customer,
                     Status = UserStatus.Active,
                     EmailVerified = false,
@@ -191,8 +192,11 @@ namespace FirstLend.Infrastructure.Services
                         UserId = user.Id,
                         Email = user.Email!,
                         FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                        PhoneNumber = user.PhoneNumber ?? "",
+                        Address = user.Address,
                         UserType = user.UserType,
-                        Status = user.Status
+                        Status = user.Status,
+                        CreatedAt = user.CreatedAt
                     }
                 };
 
@@ -236,25 +240,140 @@ namespace FirstLend.Infrastructure.Services
             });
         }
 
-        public Task<AuthResponse> ForgotPasswordAsync(ForgotPasswordRequest request)
+        public async Task<AuthResponse> ForgotPasswordAsync(ForgotPasswordRequest request)
         {
-            // Simplified - in real app, generate token and send email
-            return Task.FromResult(new AuthResponse
+            try
             {
-                Success = true,
-                Message = "If the email exists, a reset link has been sent"
-            });
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                
+                // Always return success to prevent email enumeration
+                // Don't reveal if the email exists or not for security
+                if (user == null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = true,
+                        Message = "If the email exists, a reset link has been sent"
+                    };
+                }
+
+                // Generate password reset token
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                
+                // Hash the token for storage
+                var tokenHash = Convert.ToBase64String(
+                    System.Security.Cryptography.SHA256.HashData(
+                        System.Text.Encoding.UTF8.GetBytes(resetToken)));
+
+                // Store the token in database
+                var passwordResetToken = new FirstLend.Domain.Entities.PasswordResetToken
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    TokenHash = tokenHash,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(30), // Token expires in 30 minutes
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.PasswordResetTokens.Add(passwordResetToken);
+                await _context.SaveChangesAsync();
+
+                // In a real application, you would send an email here with the reset link
+                // For now, we'll just return the token in the response (for testing only!)
+                // TODO: Implement email service to send reset link
+                // Example: await _emailService.SendPasswordResetEmail(user.Email, resetToken);
+
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = "If the email exists, a reset link has been sent",
+                    Data = new { resetToken } // Remove this in production!
+                };
+            }
+            catch (Exception)
+            {
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = "If the email exists, a reset link has been sent"
+                };
+            }
         }
 
-        public Task<AuthResponse> ResetPasswordAsync(ResetPasswordRequest request)
+        public async Task<AuthResponse> ResetPasswordAsync(ResetPasswordRequest request)
         {
-            // Simplified - in real app, validate token and reset password
-            return Task.FromResult(new AuthResponse
+            try
             {
-                Success = false,
-                Message = "Reset password functionality not implemented yet",
-                Code = "NOT_IMPLEMENTED"
-            });
+                // Hash the provided token
+                var tokenHash = Convert.ToBase64String(
+                    System.Security.Cryptography.SHA256.HashData(
+                        System.Text.Encoding.UTF8.GetBytes(request.Token)));
+
+                // Find the reset token
+                var resetTokenRecord = await _context.PasswordResetTokens
+                    .FirstOrDefaultAsync(t => 
+                        t.TokenHash == tokenHash && 
+                        t.ExpiresAt > DateTime.UtcNow && 
+                        t.UsedAt == null);
+
+                if (resetTokenRecord == null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Invalid or expired reset token",
+                        Code = "INVALID_TOKEN"
+                    };
+                }
+
+                // Find the user
+                var user = await _userManager.FindByIdAsync(resetTokenRecord.UserId);
+                if (user == null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "User not found",
+                        Code = "USER_NOT_FOUND"
+                    };
+                }
+
+                // Reset the password
+                var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+                if (!result.Succeeded)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Failed to reset password",
+                        Code = "RESET_FAILED",
+                        Errors = result.Errors.Select(e => new ValidationError
+                        {
+                            Field = e.Code,
+                            Message = e.Description
+                        }).ToList()
+                    };
+                }
+
+                // Mark the token as used
+                resetTokenRecord.UsedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = "Password reset successful"
+                };
+            }
+            catch (Exception)
+            {
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Internal server error",
+                    Code = "INTERNAL_ERROR"
+                };
+            }
         }
 
         public async Task<UserResponse?> GetCurrentUserAsync(string userId)
@@ -267,8 +386,11 @@ namespace FirstLend.Infrastructure.Services
                 UserId = user.Id,
                 Email = user.Email!,
                 FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                PhoneNumber = user.PhoneNumber ?? "",
+                Address = user.Address,
                 UserType = user.UserType,
-                Status = user.Status
+                Status = user.Status,
+                CreatedAt = user.CreatedAt
             };
         }
 

@@ -16,12 +16,15 @@ namespace FirstLend.Infrastructure
             services.AddDbContext<FirstLendDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            // Use AddIdentityCore for API-only (no cookie authentication)
+            services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.Password.RequiredLength = 8;
                 options.Password.RequireNonAlphanumeric = false;
             })
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<FirstLendDbContext>()
+            .AddSignInManager()
             .AddDefaultTokenProviders();
 
             // Register application services

@@ -11,10 +11,12 @@ namespace FirstLend.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -167,33 +169,63 @@ namespace FirstLend.Api.Controllers
 
         [HttpGet("me")]
         [Authorize]
-        [ProducesResponseType(typeof(UserResponse), 200)]
-        [ProducesResponseType(401)]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userId = User.FindFirst("sub")?.Value;
-            if (string.IsNullOrEmpty(userId))
+            try
             {
-                return Unauthorized(new AuthResponse
+                // Extract userId - the 'sub' claim is converted to NameIdentifier by ASP.NET
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? User.FindFirst("sub")?.Value
+                    ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+                
+                if (string.IsNullOrEmpty(userId))
                 {
-                    Success = false,
-                    Message = "Invalid token",
-                    Code = "INVALID_TOKEN"
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "Invalid token - no user ID found",
+                        code = "NO_USER_ID",
+                        data = (object?)null,
+                        errors = new[] { "Unable to extract user ID from authentication token" }
+                    });
+                }
+
+                var user = await _authService.GetCurrentUserAsync(userId);
+                
+                if (user == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "User not found",
+                        code = "USER_NOT_FOUND",
+                        data = (object?)null,
+                        errors = new[] { $"No user found with ID: {userId}" }
+                    });
+                }
+                
+                return Ok(new
+                {
+                    success = true,
+                    message = "User retrieved successfully",
+                    code = "",
+                    data = user,
+                    errors = (object?)null
                 });
             }
-
-            var user = await _authService.GetCurrentUserAsync(userId);
-            if (user == null)
+            catch (Exception ex)
             {
-                return NotFound(new AuthResponse
+                _logger.LogError(ex, "Exception in GetCurrentUser");
+                
+                return StatusCode(500, new
                 {
-                    Success = false,
-                    Message = "User not found",
-                    Code = "USER_NOT_FOUND"
+                    success = false,
+                    message = "Internal server error",
+                    code = "INTERNAL_ERROR",
+                    data = (object?)null,
+                    errors = new[] { ex.Message }
                 });
             }
-
-            return Ok(user);
         }
     }
 }

@@ -16,6 +16,9 @@ namespace FirstLend.Domain.Dtos.Request
         [Phone]
         public string Phone { get; set; } = "";
 
+        [StringLength(500)]
+        public string Address { get; set; } = "";
+
         [Required]
         [StringLength(100, MinimumLength = 8)]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
