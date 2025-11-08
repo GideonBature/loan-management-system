@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FraudGuard.Infrastructure.Data
+namespace FirstLend.Infrastructure.Data
 {
     public static class Seeder
     {

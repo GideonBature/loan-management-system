@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FirstLend.Domain.Entities;
+using FirstLend.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
-namespace FraudGuard.Infrastructure.Identity
+namespace FirstLend.Infrastructure.Identity
 {
     public class ApplicationUser : IdentityUser
     {
@@ -13,8 +13,12 @@ namespace FraudGuard.Infrastructure.Identity
         public string LastName { get; set; } = "";
         public string PhotoUrl { get; set; } = "";
         public string PublicId { get; set; } = "";
-        public Guid UserId { get; set; }
-
-        public User? User { get; set; }
+        public UserType UserType { get; set; } = UserType.Customer;
+        public UserStatus Status { get; set; } = UserStatus.Active;
+        public bool EmailVerified { get; set; } = false;
+        public bool PhoneVerified { get; set; } = false;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? LastLoginAt { get; set; }
     }
 }

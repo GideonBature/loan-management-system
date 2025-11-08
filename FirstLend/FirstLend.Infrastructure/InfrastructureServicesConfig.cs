@@ -1,11 +1,13 @@
+using FirstLend.Domain.Abstractions;
+using FirstLend.Infrastructure.Services;
 using FirstLend.Infrastructure.Data;
-using FraudGuard.Infrastructure.Identity;
+using FirstLend.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FraudGuard.Infrastructure
+namespace FirstLend.Infrastructure
 {
     public static class InfrastructureServicesConfig
     {
@@ -14,13 +16,16 @@ namespace FraudGuard.Infrastructure
             services.AddDbContext<FirstLendDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-            // services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-            // {
-            //     options.Password.RequiredLength = 8;
-            //     options.Password.RequireNonAlphanumeric = false;
-            // })
-            // .AddEntityFrameworkStores<FirstLendDbContext>()
-            // .AddDefaultTokenProviders();
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                options.Password.RequiredLength = 8;
+                options.Password.RequireNonAlphanumeric = false;
+            })
+            .AddEntityFrameworkStores<FirstLendDbContext>()
+            .AddDefaultTokenProviders();
+
+            // Register application services
+            services.AddScoped<IAuthService, AuthService>();
 
             return services;
         }
