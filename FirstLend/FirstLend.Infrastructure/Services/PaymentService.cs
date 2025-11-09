@@ -199,24 +199,38 @@ namespace FirstLend.Infrastructure.Services
                             
                             if (loan != null)
                             {
-                                // Calculate principal and interest split
-                                var interestAmount = loan.AmountDue - loan.Principal;
-                                var interestPerPayment = interestAmount / loan.Term;
-                                var principalPerPayment = loan.Principal / loan.Term;
+                                // Calculate total interest for the loan
+                                var totalInterest = loan.AmountDue - loan.Principal;
+                                
+                                // Calculate how much interest is remaining
+                                var principalPaid = loan.Principal - loan.OutstandingBalance;
+                                var totalPaid = loan.Principal + totalInterest - loan.AmountDue;
+                                var interestPaid = totalPaid - principalPaid;
+                                var remainingInterest = Math.Max(0, totalInterest - interestPaid);
+                                
+                                // Apply payment: Interest first, then principal
+                                var interestPayment = Math.Min(remainingInterest, amount);
+                                var principalPayment = amount - interestPayment;
 
                                 paymentHistory.Status = "Success";
                                 paymentHistory.Amount = amount;
-                                paymentHistory.Interest = Math.Min(interestPerPayment, amount);
-                                paymentHistory.Principal = amount - paymentHistory.Interest;
+                                paymentHistory.Interest = interestPayment;
+                                paymentHistory.Principal = principalPayment;
 
-                                // Update loan balance
+                                // Update loan balances
                                 loan.AmountDue -= amount;
+                                loan.OutstandingBalance -= principalPayment;
                                 
-                                // If loan is fully paid
-                                if (loan.AmountDue <= 0)
+                                // Ensure balances don't go negative
+                                if (loan.OutstandingBalance < 0) loan.OutstandingBalance = 0;
+                                if (loan.AmountDue < 0) loan.AmountDue = 0;
+                                
+                                // If loan is fully paid (both must be <= 0)
+                                if (loan.AmountDue <= 0 && loan.OutstandingBalance <= 0)
                                 {
                                     loan.Status = Domain.Enums.LoanStatus.completed;
                                     loan.AmountDue = 0;
+                                    loan.OutstandingBalance = 0;
                                 }
 
                                 await _context.SaveChangesAsync();

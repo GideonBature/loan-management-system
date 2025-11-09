@@ -56,10 +56,9 @@ namespace FirstLend.Infrastructure.Services
                 // Use the provided rate or default to the loan type's interest rate
                 var applicableRate = request.Rate.HasValue && request.Rate.Value > 0 ? request.Rate.Value : loanType.Interest;
 
-                // Calculate monthly payment using amortization formula
-                var monthlyRate = applicableRate / 100 / 12;
-                var amountDue = request.Principal * (decimal)Math.Pow((double)(1 + monthlyRate), request.Term) * monthlyRate / 
-                                ((decimal)Math.Pow((double)(1 + monthlyRate), request.Term) - 1);
+                // Calculate total amount due with interest
+                var totalInterest = request.Principal * (applicableRate / 100) * (request.Term / 12m);
+                var totalAmountDue = request.Principal + totalInterest;
 
                 var loan = new Loan
                 {
@@ -71,7 +70,7 @@ namespace FirstLend.Infrastructure.Services
                     Rate = applicableRate,
                     Term = request.Term,
                     OutstandingBalance = request.Principal,
-                    AmountDue = Math.Round(amountDue, 2),
+                    AmountDue = Math.Round(totalAmountDue, 2), // Total amount to be paid (principal + interest)
                     EmploymentStatus = request.EmploymentStatus,
                     MonthlyIncome = request.MonthlyIncome,
                     Purpose = request.Purpose,

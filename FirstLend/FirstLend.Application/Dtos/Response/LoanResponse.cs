@@ -29,5 +29,19 @@ namespace FirstLend.Application.Dtos.Response
         public string BorrowerEmail { get; set; } = "";
         public string LoanTypeName { get; set; } = "";
         public decimal LoanTypeInterest { get; set; }
+        
+        /// <summary>
+        /// Calculated payment progress percentage (0-100)
+        /// </summary>
+        public decimal PaymentProgress 
+        { 
+            get 
+            {
+                if (Principal <= 0) return 0;
+                var amountPaid = Principal - OutstandingBalance;
+                var progress = (amountPaid / Principal) * 100;
+                return Math.Round(Math.Max(0, Math.Min(100, progress)), 2);
+            } 
+        }
     }
 }
