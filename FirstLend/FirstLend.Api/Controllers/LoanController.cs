@@ -8,7 +8,7 @@ namespace FirstLend.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Roles = "Customer")]
 public class LoanController : ControllerBase
 {
     private readonly ILoanService _loanService;

@@ -81,6 +81,80 @@ namespace FirstLend.Api.Controllers
             return Unauthorized(result);
         }
 
+        /// <summary>
+        /// Admin Login - Strictly for Admin users only
+        /// </summary>
+        [HttpPost("admin/login")]
+        [ProducesResponseType(typeof(AuthResponse), 200)]
+        [ProducesResponseType(typeof(AuthResponse), 401)]
+        [ProducesResponseType(typeof(AuthResponse), 403)]
+        public async Task<IActionResult> AdminLogin([FromBody] LoginRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Validation error",
+                    Code = "VALIDATION_ERROR"
+                });
+            }
+
+            // Force admin user type
+            request.UserType = "admin";
+            
+            var result = await _authService.LoginAsync(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            // Distinguish between invalid credentials and user type mismatch
+            if (result.Code == "USER_TYPE_MISMATCH")
+            {
+                return Forbid(); // 403 Forbidden for wrong user type
+            }
+
+            return Unauthorized(result);
+        }
+
+        /// <summary>
+        /// Customer Login - Strictly for Customer users only
+        /// </summary>
+        [HttpPost("customer/login")]
+        [ProducesResponseType(typeof(AuthResponse), 200)]
+        [ProducesResponseType(typeof(AuthResponse), 401)]
+        [ProducesResponseType(typeof(AuthResponse), 403)]
+        public async Task<IActionResult> CustomerLogin([FromBody] LoginRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Validation error",
+                    Code = "VALIDATION_ERROR"
+                });
+            }
+
+            // Force customer user type
+            request.UserType = "customer";
+            
+            var result = await _authService.LoginAsync(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            // Distinguish between invalid credentials and user type mismatch
+            if (result.Code == "USER_TYPE_MISMATCH")
+            {
+                return Forbid(); // 403 Forbidden for wrong user type
+            }
+
+            return Unauthorized(result);
+        }
+
         [HttpPost("refresh-token")]
         [ProducesResponseType(typeof(AuthResponse), 200)]
         [ProducesResponseType(typeof(AuthResponse), 401)]

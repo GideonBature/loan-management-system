@@ -7,9 +7,11 @@ namespace FirstLend.Domain.Enums
 {
     public enum LoanStatus
     {
-        active,
-        paid,
         pending,
-        rejected
+        approved,
+        rejected,
+        active,
+        completed,
+        defaulted
     }
 }

@@ -83,7 +83,8 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"] ?? "firstlend-api",
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"] ?? "your-super-secret-key-min-32-chars")),
-        NameClaimType = "sub"
+        NameClaimType = "sub",
+        RoleClaimType = System.Security.Claims.ClaimTypes.Role
     };
     
     options.Events = new JwtBearerEvents

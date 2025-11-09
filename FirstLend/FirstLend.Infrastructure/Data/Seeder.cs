@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FirstLend.Infrastructure.Data;
+using FirstLend.Infrastructure.Identity;
 using FirstLend.Domain.Entities;
+using FirstLend.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,22 +19,83 @@ namespace FirstLend.Infrastructure.Data
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<FirstLendDbContext>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             // Ensure database is created
             await context.Database.MigrateAsync();
             
-            var roles = new string[] { "admin", "borrower" };
+            var roles = new string[] { "Admin", "Customer" };
             try
             {
-                if(!roleManager.Roles.Any())
+                // Create roles if they don't exist or fix casing if wrong
+                foreach(var roleName in roles)
                 {
-                    foreach(var role in roles)
+                    var existingRole = await roleManager.FindByNameAsync(roleName);
+                    if(existingRole == null)
                     {
-                        if(!await roleManager.RoleExistsAsync(role))
+                        // Check if a lowercase version exists
+                        var lowercaseRole = await roleManager.FindByNameAsync(roleName.ToLower());
+                        if(lowercaseRole != null)
                         {
-                            await roleManager.CreateAsync(new IdentityRole(role));
+                            // Update the role name to proper casing
+                            lowercaseRole.Name = roleName;
+                            lowercaseRole.NormalizedName = roleName.ToUpper();
+                            await roleManager.UpdateAsync(lowercaseRole);
+                            Console.WriteLine($"✅ Updated role casing: {roleName}");
+                        }
+                        else
+                        {
+                            // Create new role
+                            await roleManager.CreateAsync(new IdentityRole(roleName));
+                            Console.WriteLine($"✅ Created role: {roleName}");
                         }
                     }
+                }
+
+                // Seed default admin user
+                var existingAdmin = await userManager.FindByEmailAsync("admin@email.com");
+                if (existingAdmin == null)
+                {
+                    var adminUser = new ApplicationUser
+                    {
+                        UserName = "admin@email.com",
+                        Email = "admin@email.com",
+                        FirstName = "Admin",
+                        LastName = "User",
+                        PhoneNumber = "+234-admin",
+                        Address = "Admin Office",
+                        UserType = UserType.Admin,
+                        Status = UserStatus.Active,
+                        CreatedAt = DateTime.UtcNow,
+                        EmailConfirmed = true
+                    };
+
+                    var result = await userManager.CreateAsync(adminUser, "Admin@123");
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(adminUser, "Admin");
+                        Console.WriteLine("✅ Default admin user created: admin@email.com / Admin@123");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"❌ Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                    }
+                }
+                else
+                {
+                    // Ensure existing admin has the correct role
+                    var userRoles = await userManager.GetRolesAsync(existingAdmin);
+                    if (!userRoles.Contains("Admin"))
+                    {
+                        // Remove any incorrect role casing
+                        if (userRoles.Contains("admin"))
+                        {
+                            await userManager.RemoveFromRoleAsync(existingAdmin, "admin");
+                        }
+                        await userManager.AddToRoleAsync(existingAdmin, "Admin");
+                        Console.WriteLine("✅ Updated admin user role to proper casing");
+                    }
+                    Console.WriteLine("✓ Admin user already exists with correct role");
                 }
 
                 // Seed loan types
@@ -49,6 +112,11 @@ namespace FirstLend.Infrastructure.Data
 
                     context.LoanTypes.AddRange(loanTypes);
                     await context.SaveChangesAsync();
+                    Console.WriteLine("✅ Loan types seeded successfully");
+                }
+                else
+                {
+                    Console.WriteLine("✓ Loan types already exist");
                 }
                 
             }catch(Exception e)

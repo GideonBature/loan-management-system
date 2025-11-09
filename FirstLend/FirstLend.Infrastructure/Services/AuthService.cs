@@ -93,6 +93,9 @@ namespace FirstLend.Infrastructure.Services
                     };
                 }
 
+                // Assign Customer role to new user
+                await _userManager.AddToRoleAsync(user, "Customer");
+
                 var response = new RegisterResponse
                 {
                     UserId = user.Id,
@@ -177,7 +180,7 @@ namespace FirstLend.Infrastructure.Services
                 await _userManager.UpdateAsync(user);
 
                 // Generate tokens
-                var token = GenerateJwtToken(user);
+                var token = await GenerateJwtToken(user);
                 var refreshToken = GenerateRefreshToken();
 
                 // Store refresh token (in a real app, hash it and store in DB)
@@ -394,9 +397,10 @@ namespace FirstLend.Infrastructure.Services
             };
         }
 
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
-            var claims = new[]
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email!),
@@ -404,6 +408,8 @@ namespace FirstLend.Infrastructure.Services
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
             };
+
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"] ?? "default-secret-key"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
