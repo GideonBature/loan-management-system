@@ -32,6 +32,13 @@ namespace FirstLend.Infrastructure
             services.AddScoped<FirstLend.Domain.Abstractions.IAuthService, AuthService>();
             services.AddScoped<ILoanTypeService, LoanTypeService>();
             services.AddScoped<ILoanService, LoanService>();
+            services.AddScoped<IPaymentService, PaymentService>();
+
+            // Register HttpClient for Paystack integration
+            services.AddHttpClient();
+
+            // Register background services
+            services.AddHostedService<LoanActivationService>();
 
             return services;
         }

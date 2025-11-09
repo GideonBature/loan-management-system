@@ -24,6 +24,8 @@ namespace FirstLend.Domain.Entities
         public DateTime NextPaymentDate { get; set; }
         public string Purpose { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? ApprovedAt { get; set; }
+        public DateTime? ActivatedAt { get; set; }
         public DateTime DueAt { get; set; }
 
         // Navigation properties removed - will be configured in DbContext

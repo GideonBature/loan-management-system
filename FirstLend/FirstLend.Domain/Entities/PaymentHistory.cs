@@ -12,7 +12,7 @@ namespace FirstLend.Domain.Entities
         public Guid Id { get; set; }
         public Guid LoanId { get; set; }
         public Guid TransactionId { get; set; }
-        public Guid UserId { get; set; }
+        public string UserId { get; set; } = ""; // Changed to string to match ApplicationUser.Id
         public decimal Amount { get; set; }
         public decimal Principal { get; set; }
         public decimal Interest { get; set; }
@@ -22,6 +22,5 @@ namespace FirstLend.Domain.Entities
 
 
         public Loan? Loan { get; set; }
-        public User? User { get; set; }
     }
 }

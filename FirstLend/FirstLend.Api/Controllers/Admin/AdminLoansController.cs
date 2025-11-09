@@ -249,6 +249,7 @@ public class AdminLoansController : ControllerBase
             }
 
             loan.Status = LoanStatus.approved;
+            loan.ApprovedAt = DateTime.UtcNow;
             _context.Loans.Update(loan);
             await _context.SaveChangesAsync();
 
