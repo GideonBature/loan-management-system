@@ -40,6 +40,9 @@ namespace FirstLend.Infrastructure
             // Register background services
             services.AddHostedService<LoanActivationService>();
 
+            // Register Gemini AI service (Google GenAI)
+            services.AddSingleton<IGeminiService, GeminiService>();
+
             return services;
         }
 
