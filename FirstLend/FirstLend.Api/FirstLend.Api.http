@@ -4,3 +4,62 @@ GET {{FirstLend.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# KYC Verification - Minimal Request (Only BVN Required)
+# Full name is retrieved from the logged-in user's profile
+# Make sure to include Authorization header with your JWT token
+POST {{FirstLend.Api_HostAddress}}/api/kyc/verify
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "bvn": "22227777222"
+}
+
+###
+
+# KYC Verification - With Optional NIN Cross-Verification
+# Full name is automatically retrieved from the logged-in user's profile
+# NIN is optional for additional verification
+POST {{FirstLend.Api_HostAddress}}/api/kyc/verify
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "bvn": "22227777222",
+  "nin": "AA1234567890123B"
+}
+
+###
+
+# Get KYC Verification Status
+# Retrieve the current KYC verification status of the logged-in user
+GET {{FirstLend.Api_HostAddress}}/api/kyc/status
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+# Update KYC Verification Status (Admin function)
+# Update the KYC verification status of the current user
+PUT {{FirstLend.Api_HostAddress}}/api/kyc/status
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "isVerified": true,
+  "reason": "Manual verification by admin"
+}
+
+###
+
+# Update to unverify KYC
+PUT {{FirstLend.Api_HostAddress}}/api/kyc/status
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "isVerified": false,
+  "reason": "KYC verification revoked due to compliance review"
+}
+

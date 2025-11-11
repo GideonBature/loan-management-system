@@ -3,6 +3,7 @@ using System;
 using FirstLend.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstLend.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(FirstLendDbContext))]
-    partial class FirstLendDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251111101646_AddKycVerificationProperties")]
+    partial class AddKycVerificationProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,45 +24,6 @@ namespace FirstLend.Infrastructure.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("FirstLend.Domain.Entities.CreditAccount", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ClosedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal?>("CreditLimit")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("CurrentBalance")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("DateOpened")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Institution")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("OpeningBalance")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("PerformanceStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("RepaymentAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CreditAccounts");
-                });
 
             modelBuilder.Entity("FirstLend.Domain.Entities.Loan", b =>
                 {
@@ -288,29 +252,6 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User");
-                });
-
-            modelBuilder.Entity("FirstLend.Domain.Entities.UserCreditAccount", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CreditAccountId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreditAccountId");
-
-                    b.HasIndex("UserId", "CreditAccountId")
-                        .IsUnique();
-
-                    b.ToTable("UserCreditAccounts");
                 });
 
             modelBuilder.Entity("FirstLend.Infrastructure.Identity.ApplicationUser", b =>
@@ -564,38 +505,6 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("FirstLend.Domain.Entities.CreditAccount", b =>
-                {
-                    b.OwnsMany("FirstLend.Domain.Entities.RepaymentEvent", "RepaymentHistory", b1 =>
-                        {
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("uuid");
-
-                            b1.Property<Guid>("CreditAccountId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Period")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Status")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("CreditAccountId");
-
-                            b1.ToTable("RepaymentEvent");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CreditAccountId");
-                        });
-
-                    b.Navigation("RepaymentHistory");
-                });
-
             modelBuilder.Entity("FirstLend.Domain.Entities.Loan", b =>
                 {
                     b.HasOne("FirstLend.Infrastructure.Identity.ApplicationUser", null)
@@ -633,17 +542,6 @@ namespace FirstLend.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Loan");
-                });
-
-            modelBuilder.Entity("FirstLend.Domain.Entities.UserCreditAccount", b =>
-                {
-                    b.HasOne("FirstLend.Domain.Entities.CreditAccount", "CreditAccount")
-                        .WithMany()
-                        .HasForeignKey("CreditAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreditAccount");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

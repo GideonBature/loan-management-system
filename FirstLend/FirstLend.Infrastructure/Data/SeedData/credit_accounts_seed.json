@@ -1,0 +1,499 @@
+
+[
+    {
+    "Institution": "FirstBank Nigeria",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2021-05-12T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 500000.00,
+    "CurrentBalance": 250000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 25000.00,
+    "RepaymentHistory": [
+      { "Period": "01-2025", "Status": "paid" },
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "GTBank Plc",
+    "Type": "Revolving",
+    "PerformanceStatus": "Delinquent30",
+    "DateOpened": "2019-08-20T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 74000.00,
+    "CreditLimit": 100000.00,
+    "RepaymentAmount": 5000.00,
+    "RepaymentHistory": [
+      { "Period": "11-2024", "Status": "late" },
+      { "Period": "12-2024", "Status": "missed" },
+      { "Period": "01-2025", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "Access Bank",
+    "Type": "Mortgage",
+    "PerformanceStatus": "Closed",
+    "DateOpened": "2015-02-01T00:00:00",
+    "ClosedDate": "2023-10-01T00:00:00",
+    "OpeningBalance": 10000000.00,
+    "CurrentBalance": 0.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 200000.00,
+    "RepaymentHistory": [
+      { "Period": "07-2023", "Status": "paid" },
+      { "Period": "08-2023", "Status": "paid" },
+      { "Period": "09-2023", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Zenith Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2022-03-19T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 2500000.00,
+    "CurrentBalance": 1800000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 100000.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "UBA",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2020-11-09T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 1200000.00,
+    "CurrentBalance": 600000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 50000.00,
+    "RepaymentHistory": [
+      { "Period": "01-2025", "Status": "paid" },
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "Sterling Bank",
+    "Type": "Revolving",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2023-02-15T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 25000.00,
+    "CreditLimit": 80000.00,
+    "RepaymentAmount": 4000.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Fidelity Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Default",
+    "DateOpened": "2018-09-21T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 3500000.00,
+    "CurrentBalance": 3300000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 40000.00,
+    "RepaymentHistory": [
+      { "Period": "09-2024", "Status": "missed" },
+      { "Period": "10-2024", "Status": "missed" },
+      { "Period": "11-2024", "Status": "late" }
+    ]
+  },
+  {
+    "Institution": "EcoBank",
+    "Type": "Revolving",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2022-06-12T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 150000.00,
+    "CreditLimit": 300000.00,
+    "RepaymentAmount": 12000.00,
+    "RepaymentHistory": [
+      { "Period": "01-2025", "Status": "paid" },
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Union Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Closed",
+    "DateOpened": "2016-11-05T00:00:00",
+    "ClosedDate": "2021-07-10T00:00:00",
+    "OpeningBalance": 800000.00,
+    "CurrentBalance": 0.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 20000.00,
+    "RepaymentHistory": [
+      { "Period": "05-2021", "Status": "paid" },
+      { "Period": "06-2021", "Status": "paid" },
+      { "Period": "07-2021", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "FCMB",
+    "Type": "Revolving",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2024-01-10T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 35000.00,
+    "CreditLimit": 120000.00,
+    "RepaymentAmount": 3000.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "Wema Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Delinquent30",
+    "DateOpened": "2019-04-03T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 1000000.00,
+    "CurrentBalance": 850000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 15000.00,
+    "RepaymentHistory": [
+      { "Period": "10-2024", "Status": "late" },
+      { "Period": "11-2024", "Status": "missed" },
+      { "Period": "12-2024", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "Heritage Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2023-03-15T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 2200000.00,
+    "CurrentBalance": 1800000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 75000.00,
+    "RepaymentHistory": [
+      { "Period": "01-2025", "Status": "paid" },
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Polaris Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Default",
+    "DateOpened": "2018-03-01T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 1500000.00,
+    "CurrentBalance": 1400000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 20000.00,
+    "RepaymentHistory": [
+      { "Period": "09-2024", "Status": "missed" },
+      { "Period": "10-2024", "Status": "missed" },
+      { "Period": "11-2024", "Status": "missed" }
+    ]
+  },
+  {
+    "Institution": "Providus Bank",
+    "Type": "Revolving",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2023-10-07T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 19000.00,
+    "CreditLimit": 60000.00,
+    "RepaymentAmount": 2500.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Jaiz Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Closed",
+    "DateOpened": "2016-10-25T00:00:00",
+    "ClosedDate": "2022-05-30T00:00:00",
+    "OpeningBalance": 700000.00,
+    "CurrentBalance": 0.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 18000.00,
+    "RepaymentHistory": [
+      { "Period": "03-2022", "Status": "paid" },
+      { "Period": "04-2022", "Status": "paid" },
+      { "Period": "05-2022", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Stanbic IBTC",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2022-12-01T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 900000.00,
+    "CurrentBalance": 550000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 30000.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "GTBank Plc",
+    "Type": "Revolving",
+    "PerformanceStatus": "Delinquent30",
+    "DateOpened": "2019-08-20T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 74000.00,
+    "CreditLimit": 100000.00,
+    "RepaymentAmount": 5000.00,
+    "RepaymentHistory": [
+      { "Period": "11-2024", "Status": "late" },
+      { "Period": "12-2024", "Status": "missed" },
+      { "Period": "01-2025", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "Access Bank",
+    "Type": "Mortgage",
+    "PerformanceStatus": "Closed",
+    "DateOpened": "2015-02-01T00:00:00",
+    "ClosedDate": "2023-10-01T00:00:00",
+    "OpeningBalance": 10000000.00,
+    "CurrentBalance": 0.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 200000.00,
+    "RepaymentHistory": [
+      { "Period": "07-2023", "Status": "paid" },
+      { "Period": "08-2023", "Status": "paid" },
+      { "Period": "09-2023", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Zenith Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2022-03-19T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 2500000.00,
+    "CurrentBalance": 1800000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 100000.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "UBA",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2020-11-09T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 1200000.00,
+    "CurrentBalance": 600000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 50000.00,
+    "RepaymentHistory": [
+      { "Period": "01-2025", "Status": "paid" },
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "Sterling Bank",
+    "Type": "Revolving",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2023-02-15T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 25000.00,
+    "CreditLimit": 80000.00,
+    "RepaymentAmount": 4000.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Fidelity Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Default",
+    "DateOpened": "2018-09-21T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 3500000.00,
+    "CurrentBalance": 3300000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 40000.00,
+    "RepaymentHistory": [
+      { "Period": "09-2024", "Status": "missed" },
+      { "Period": "10-2024", "Status": "missed" },
+      { "Period": "11-2024", "Status": "late" }
+    ]
+  },
+  {
+    "Institution": "EcoBank",
+    "Type": "Revolving",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2022-06-12T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 150000.00,
+    "CreditLimit": 300000.00,
+    "RepaymentAmount": 12000.00,
+    "RepaymentHistory": [
+      { "Period": "01-2025", "Status": "paid" },
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Union Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Closed",
+    "DateOpened": "2016-11-05T00:00:00",
+    "ClosedDate": "2021-07-10T00:00:00",
+    "OpeningBalance": 800000.00,
+    "CurrentBalance": 0.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 20000.00,
+    "RepaymentHistory": [
+      { "Period": "05-2021", "Status": "paid" },
+      { "Period": "06-2021", "Status": "paid" },
+      { "Period": "07-2021", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "FCMB",
+    "Type": "Revolving",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2024-01-10T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 35000.00,
+    "CreditLimit": 120000.00,
+    "RepaymentAmount": 3000.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "Wema Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Delinquent30",
+    "DateOpened": "2019-04-03T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 1000000.00,
+    "CurrentBalance": 850000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 15000.00,
+    "RepaymentHistory": [
+      { "Period": "10-2024", "Status": "late" },
+      { "Period": "11-2024", "Status": "missed" },
+      { "Period": "12-2024", "Status": "pending" }
+    ]
+  },
+  {
+    "Institution": "Heritage Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2023-03-15T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 2200000.00,
+    "CurrentBalance": 1800000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 75000.00,
+    "RepaymentHistory": [
+      { "Period": "01-2025", "Status": "paid" },
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Polaris Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Default",
+    "DateOpened": "2018-03-01T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 1500000.00,
+    "CurrentBalance": 1400000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 20000.00,
+    "RepaymentHistory": [
+      { "Period": "09-2024", "Status": "missed" },
+      { "Period": "10-2024", "Status": "missed" },
+      { "Period": "11-2024", "Status": "missed" }
+    ]
+  },
+  {
+    "Institution": "Providus Bank",
+    "Type": "Revolving",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2023-10-07T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 0.00,
+    "CurrentBalance": 19000.00,
+    "CreditLimit": 60000.00,
+    "RepaymentAmount": 2500.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Jaiz Bank",
+    "Type": "Installment",
+    "PerformanceStatus": "Closed",
+    "DateOpened": "2016-10-25T00:00:00",
+    "ClosedDate": "2022-05-30T00:00:00",
+    "OpeningBalance": 700000.00,
+    "CurrentBalance": 0.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 18000.00,
+    "RepaymentHistory": [
+      { "Period": "03-2022", "Status": "paid" },
+      { "Period": "04-2022", "Status": "paid" },
+      { "Period": "05-2022", "Status": "paid" }
+    ]
+  },
+  {
+    "Institution": "Stanbic IBTC",
+    "Type": "Installment",
+    "PerformanceStatus": "Performing",
+    "DateOpened": "2022-12-01T00:00:00",
+    "ClosedDate": null,
+    "OpeningBalance": 900000.00,
+    "CurrentBalance": 550000.00,
+    "CreditLimit": null,
+    "RepaymentAmount": 30000.00,
+    "RepaymentHistory": [
+      { "Period": "02-2025", "Status": "paid" },
+      { "Period": "03-2025", "Status": "paid" },
+      { "Period": "04-2025", "Status": "paid" }
+    ]
+  }
+]

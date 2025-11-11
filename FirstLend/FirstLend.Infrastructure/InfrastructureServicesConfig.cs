@@ -33,9 +33,14 @@ namespace FirstLend.Infrastructure
             services.AddScoped<ILoanTypeService, LoanTypeService>();
             services.AddScoped<ILoanService, LoanService>();
             services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<FirstLend.Domain.Abstractions.IKycService, KycService>();
+            services.AddScoped<ICreditScoreService, CreditScoreService>();
 
             // Register HttpClient for Paystack integration
             services.AddHttpClient();
+
+            // Register HttpClient for Mono API integration
+            services.AddHttpClient<KycService>();
 
             // Register background services
             services.AddHostedService<LoanActivationService>();

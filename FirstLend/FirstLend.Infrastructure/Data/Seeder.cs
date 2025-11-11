@@ -9,6 +9,7 @@ using FirstLend.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace FirstLend.Infrastructure.Data
 {
@@ -118,7 +119,27 @@ namespace FirstLend.Infrastructure.Data
                 {
                     Console.WriteLine("✓ Loan types already exist");
                 }
-                
+
+                if (!context.CreditAccounts.Any())
+                {
+                    var creditAccountsData = File.ReadAllTextAsync("../FirstLend.Infrastructure/Data/SeedData/credit_accounts_seed.json").Result;
+                    var creditAccounts = JsonConvert.DeserializeObject<List<CreditAccount>>(creditAccountsData);
+                    
+                    // Convert all DateTime values to UTC for PostgreSQL compatibility
+                    foreach (var account in creditAccounts)
+                    {
+                        account.DateOpened = DateTime.SpecifyKind(account.DateOpened, DateTimeKind.Utc);
+                        if (account.ClosedDate.HasValue)
+                        {
+                            account.ClosedDate = DateTime.SpecifyKind(account.ClosedDate.Value, DateTimeKind.Utc);
+                        }
+                    }
+                    
+                    context.CreditAccounts.AddRange(creditAccounts);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("✅ Credit accounts seeded successfully");
+                }
+
             }catch(Exception e)
             {
                 Console.WriteLine($"Error seeding data - {e.Message}");

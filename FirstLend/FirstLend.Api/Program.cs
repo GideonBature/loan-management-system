@@ -54,6 +54,9 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+
+    // Enable Swagger Annotations
+    options.EnableAnnotations();
 });
 
 // Configure CORS to allow all origins (for development)

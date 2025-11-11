@@ -21,5 +21,11 @@ namespace FirstLend.Infrastructure.Identity
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLoginAt { get; set; }
+        
+        // KYC Verification Properties
+        public bool KycVerified { get; set; } = false;
+        public string BVN { get; set; } = "";
+        public string NIN { get; set; } = "";
+        public DateTime? KycVerificationDate { get; set; }
     }
 }
