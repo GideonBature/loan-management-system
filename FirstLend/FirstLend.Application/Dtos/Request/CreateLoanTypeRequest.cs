@@ -11,5 +11,9 @@ namespace FirstLend.Application.Dtos.Request
         [Required(ErrorMessage = "Interest rate is required")]
         [Range(0.01, 100, ErrorMessage = "Interest rate must be between 0.01 and 100")]
         public decimal Interest { get; set; }
+
+        [Required(ErrorMessage = "Maximum term in months is required")]
+        [Range(1, 600, ErrorMessage = "Maximum term must be between 1 and 600 months")]
+        public int MaxTermMonths { get; set; }
     }
 }

@@ -38,7 +38,11 @@ namespace FirstLend.Infrastructure.Services
                 {
                     Id = Guid.NewGuid(),
                     Name = request.Name,
-                    Interest = request.Interest
+                    Interest = request.Interest,
+                    MaxTermMonths = request.MaxTermMonths,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 };
 
                 _context.LoanTypes.Add(loanType);
@@ -53,7 +57,11 @@ namespace FirstLend.Infrastructure.Services
                     {
                         Id = loanType.Id,
                         Name = loanType.Name,
-                        Interest = loanType.Interest
+                        Interest = loanType.Interest,
+                        MaxTermMonths = loanType.MaxTermMonths,
+                        IsActive = loanType.IsActive,
+                        CreatedAt = loanType.CreatedAt,
+                        UpdatedAt = loanType.UpdatedAt
                     },
                     Errors = null
                 };
@@ -98,7 +106,11 @@ namespace FirstLend.Infrastructure.Services
                     {
                         Id = loanType.Id,
                         Name = loanType.Name,
-                        Interest = loanType.Interest
+                        Interest = loanType.Interest,
+                        MaxTermMonths = loanType.MaxTermMonths,
+                        IsActive = loanType.IsActive,
+                        CreatedAt = loanType.CreatedAt,
+                        UpdatedAt = loanType.UpdatedAt
                     },
                     Errors = null
                 };
@@ -130,7 +142,11 @@ namespace FirstLend.Infrastructure.Services
                 {
                     Id = lt.Id,
                     Name = lt.Name,
-                    Interest = lt.Interest
+                    Interest = lt.Interest,
+                    MaxTermMonths = lt.MaxTermMonths,
+                    IsActive = lt.IsActive,
+                    CreatedAt = lt.CreatedAt,
+                    UpdatedAt = lt.UpdatedAt
                 }).ToList();
 
                 return new ServiceResponse<List<LoanTypeResponse>>
@@ -198,6 +214,13 @@ namespace FirstLend.Infrastructure.Services
                     loanType.Interest = request.Interest.Value;
                 }
 
+                if (request.MaxTermMonths.HasValue)
+                {
+                    loanType.MaxTermMonths = request.MaxTermMonths.Value;
+                }
+
+                loanType.UpdatedAt = DateTime.UtcNow;
+
                 await _context.SaveChangesAsync();
 
                 return new ServiceResponse<LoanTypeResponse>
@@ -209,7 +232,11 @@ namespace FirstLend.Infrastructure.Services
                     {
                         Id = loanType.Id,
                         Name = loanType.Name,
-                        Interest = loanType.Interest
+                        Interest = loanType.Interest,
+                        MaxTermMonths = loanType.MaxTermMonths,
+                        IsActive = loanType.IsActive,
+                        CreatedAt = loanType.CreatedAt,
+                        UpdatedAt = loanType.UpdatedAt
                     },
                     Errors = null
                 };
@@ -279,6 +306,63 @@ namespace FirstLend.Infrastructure.Services
                     Message = "Failed to delete loan type",
                     Code = "DELETE_FAILED",
                     Data = false,
+                    Errors = new[] { ex.Message }
+                };
+            }
+        }
+
+        public async Task<ServiceResponse<LoanTypeResponse>> ToggleStatusAsync(Guid id)
+        {
+            try
+            {
+                var loanType = await _context.LoanTypes.FindAsync(id);
+
+                if (loanType == null)
+                {
+                    return new ServiceResponse<LoanTypeResponse>
+                    {
+                        Success = false,
+                        Message = "Loan type not found",
+                        Code = "NOT_FOUND",
+                        Data = null,
+                        Errors = new[] { $"Loan type with ID {id} not found" }
+                    };
+                }
+
+                // Toggle the status
+                loanType.IsActive = !loanType.IsActive;
+                loanType.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                var statusText = loanType.IsActive ? "activated" : "deactivated";
+
+                return new ServiceResponse<LoanTypeResponse>
+                {
+                    Success = true,
+                    Message = $"Loan type {statusText} successfully",
+                    Code = "",
+                    Data = new LoanTypeResponse
+                    {
+                        Id = loanType.Id,
+                        Name = loanType.Name,
+                        Interest = loanType.Interest,
+                        MaxTermMonths = loanType.MaxTermMonths,
+                        IsActive = loanType.IsActive,
+                        CreatedAt = loanType.CreatedAt,
+                        UpdatedAt = loanType.UpdatedAt
+                    },
+                    Errors = null
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResponse<LoanTypeResponse>
+                {
+                    Success = false,
+                    Message = "Failed to toggle loan type status",
+                    Code = "TOGGLE_FAILED",
+                    Data = null,
                     Errors = new[] { ex.Message }
                 };
             }

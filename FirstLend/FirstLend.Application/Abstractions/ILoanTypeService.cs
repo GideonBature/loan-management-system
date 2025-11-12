@@ -10,5 +10,6 @@ namespace FirstLend.Application.Abstractions
         Task<ServiceResponse<List<LoanTypeResponse>>> GetAllAsync(int page = 1, int pageSize = 10);
         Task<ServiceResponse<LoanTypeResponse>> UpdateAsync(Guid id, UpdateLoanTypeRequest request);
         Task<ServiceResponse<bool>> DeleteAsync(Guid id);
+        Task<ServiceResponse<LoanTypeResponse>> ToggleStatusAsync(Guid id);
     }
 }

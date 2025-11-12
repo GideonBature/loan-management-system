@@ -122,4 +122,21 @@ public class LoanTypeController : ControllerBase
 
         return Ok(response);
     }
+
+    /// <summary>
+    /// Toggle loan type status (Activate/Deactivate) - Admin only
+    /// </summary>
+    [HttpPatch("{id}/toggle-status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ToggleLoanTypeStatus(Guid id)
+    {
+        var response = await _loanTypeService.ToggleStatusAsync(id);
+        
+        if (!response.Success)
+        {
+            return NotFound(response);
+        }
+
+        return Ok(response);
+    }
 }

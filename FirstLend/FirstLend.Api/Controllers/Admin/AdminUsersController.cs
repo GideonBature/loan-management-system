@@ -60,7 +60,7 @@ public class AdminUsersController : ControllerBase
         {
             var query = _userManager.Users.AsQueryable();
 
-            // Filter by user type if provided
+            // Filter by user type if provided, otherwise default to Customer only
             if (!string.IsNullOrEmpty(userType))
             {
                 var role = await _roleManager.FindByNameAsync(userType);
@@ -69,6 +69,12 @@ public class AdminUsersController : ControllerBase
                     var usersInRole = await _userManager.GetUsersInRoleAsync(userType);
                     query = query.Where(u => usersInRole.Contains(u));
                 }
+            }
+            else
+            {
+                // Default: Only return users with Customer role (exclude admins)
+                var customersInRole = await _userManager.GetUsersInRoleAsync("Customer");
+                query = query.Where(u => customersInRole.Contains(u));
             }
 
             var totalCount = await query.CountAsync();

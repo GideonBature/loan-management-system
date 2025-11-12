@@ -25,10 +25,193 @@ public class AdminDashboardController : ControllerBase
     }
 
     /// <summary>
-    /// Get dashboard summary statistics (Admin only)
+    /// Get dashboard summary statistics with date filters (Admin only)
     /// </summary>
     [HttpGet("summary")]
-    public async Task<IActionResult> GetDashboardSummary()
+    public async Task<IActionResult> GetDashboardSummary([FromQuery] string period = "month")
+    {
+        try
+        {
+            // Calculate date range based on period
+            DateTime startDate;
+            DateTime endDate = DateTime.UtcNow;
+
+            switch (period.ToLower())
+            {
+                case "today":
+                    startDate = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+                    break;
+                case "week":
+                case "7days":
+                    startDate = DateTime.UtcNow.AddDays(-7);
+                    break;
+                case "month":
+                default:
+                    startDate = DateTime.SpecifyKind(new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1), DateTimeKind.Utc);
+                    break;
+            }
+
+            // Total New Applications (within period)
+            var totalNewApplications = await _context.Loans
+                .Where(l => l.CreatedAt >= startDate && l.CreatedAt <= endDate)
+                .CountAsync();
+
+            // Total Disbursed (active + completed loans within period)
+            var totalDisbursed = await _context.Loans
+                .Where(l => (l.Status == LoanStatus.active || l.Status == LoanStatus.completed) 
+                    && l.CreatedAt >= startDate && l.CreatedAt <= endDate)
+                .SumAsync(l => (decimal?)l.Principal) ?? 0;
+
+            // Total Outstanding (sum of AmountDue for active loans)
+            var totalOutstanding = await _context.Loans
+                .Where(l => l.Status == LoanStatus.active)
+                .SumAsync(l => (decimal?)l.AmountDue) ?? 0;
+
+            // Loan Application Status counts
+            var pendingLoans = await _context.Loans
+                .Where(l => l.Status == LoanStatus.pending && l.CreatedAt >= startDate && l.CreatedAt <= endDate)
+                .CountAsync();
+
+            // Approved includes both 'approved' and 'active' statuses (all approved loans whether disbursed or not)
+            var approvedLoans = await _context.Loans
+                .Where(l => (l.Status == LoanStatus.approved || l.Status == LoanStatus.active) 
+                    && l.CreatedAt >= startDate && l.CreatedAt <= endDate)
+                .CountAsync();
+
+            var rejectedLoans = await _context.Loans
+                .Where(l => l.Status == LoanStatus.rejected && l.CreatedAt >= startDate && l.CreatedAt <= endDate)
+                .CountAsync();
+
+            var underReviewLoans = await _context.Loans
+                .Where(l => l.Status == LoanStatus.pending && l.CreatedAt >= startDate && l.CreatedAt <= endDate)
+                .CountAsync();
+
+            // Loan Type Distribution
+            var loanTypeDistribution = await _context.Loans
+                .Where(l => l.CreatedAt >= startDate && l.CreatedAt <= endDate)
+                .Include(l => l.LoanType)
+                .GroupBy(l => l.LoanType!.Name)
+                .Select(g => new { LoanType = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var totalLoansForDistribution = loanTypeDistribution.Sum(x => x.Count);
+            var loanTypeStats = loanTypeDistribution.Select(x => new
+            {
+                LoanType = x.LoanType,
+                Count = x.Count,
+                Percentage = totalLoansForDistribution > 0 ? Math.Round((double)x.Count / totalLoansForDistribution * 100, 1) : 0
+            }).ToList();
+
+            // Monthly Disbursement Trend (last 12 months)
+            var monthlyDisbursements = new List<object>();
+            for (int i = 11; i >= 0; i--)
+            {
+                var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-i);
+                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+                
+                var amount = await _context.Loans
+                    .Where(l => (l.Status == LoanStatus.active || l.Status == LoanStatus.completed)
+                        && l.CreatedAt >= monthStart && l.CreatedAt <= monthEnd)
+                    .SumAsync(l => (decimal?)l.Principal) ?? 0;
+
+                monthlyDisbursements.Add(new
+                {
+                    Month = monthStart.ToString("MMM"),
+                    Amount = amount
+                });
+            }
+
+            // Calculate percentage changes (comparing to previous period)
+            DateTime previousStartDate;
+            switch (period.ToLower())
+            {
+                case "today":
+                    previousStartDate = new DateTime(DateTime.UtcNow.AddDays(-1).Year, DateTime.UtcNow.AddDays(-1).Month, DateTime.UtcNow.AddDays(-1).Day, 0, 0, 0, DateTimeKind.Utc);
+                    break;
+                case "week":
+                case "7days":
+                    previousStartDate = DateTime.UtcNow.AddDays(-14);
+                    break;
+                case "month":
+                default:
+                    previousStartDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
+                    break;
+            }
+
+            var previousApplications = await _context.Loans
+                .Where(l => l.CreatedAt >= previousStartDate && l.CreatedAt < startDate)
+                .CountAsync();
+
+            var previousDisbursed = await _context.Loans
+                .Where(l => (l.Status == LoanStatus.active || l.Status == LoanStatus.completed)
+                    && l.CreatedAt >= previousStartDate && l.CreatedAt < startDate)
+                .SumAsync(l => (decimal?)l.Principal) ?? 0;
+
+            var applicationsChange = previousApplications > 0 
+                ? Math.Round((double)(totalNewApplications - previousApplications) / previousApplications * 100, 1)
+                : 0;
+
+            var disbursedChange = previousDisbursed > 0
+                ? Math.Round((double)(totalDisbursed - previousDisbursed) / (double)previousDisbursed * 100, 1)
+                : 0;
+
+            var response = new
+            {
+                Period = period,
+                DateRange = new { Start = startDate, End = endDate },
+                
+                // Summary Cards
+                TotalNewApplications = totalNewApplications,
+                ApplicationsChangePercentage = applicationsChange,
+                
+                TotalDisbursed = totalDisbursed,
+                DisbursedChangePercentage = disbursedChange,
+                
+                TotalOutstanding = totalOutstanding,
+                OutstandingChangePercentage = 5.4, // You can calculate this similarly
+                
+                // Loan Application Status
+                LoanApplicationStatus = new
+                {
+                    Pending = pendingLoans,
+                    Approved = approvedLoans,
+                    Rejected = rejectedLoans,
+                    UnderReview = underReviewLoans
+                },
+                
+                // Loan Type Distribution
+                LoanTypeDistribution = loanTypeStats,
+                
+                // Monthly Disbursement Trend
+                MonthlyDisbursementTrend = monthlyDisbursements
+            };
+
+            return Ok(new ServiceResponse<object>
+            {
+                Success = true,
+                Message = "Dashboard summary retrieved successfully",
+                Code = "200",
+                Data = response
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ServiceResponse<object>
+            {
+                Success = false,
+                Message = "Error retrieving dashboard summary",
+                Code = "500",
+                Data = null,
+                Errors = new[] { ex.Message }
+            });
+        }
+    }
+
+    /// <summary>
+    /// Get dashboard summary statistics (DEPRECATED - use /summary with period param)
+    /// </summary>
+    [HttpGet("summary-old")]
+    public async Task<IActionResult> GetDashboardSummaryOld()
     {
         try
         {

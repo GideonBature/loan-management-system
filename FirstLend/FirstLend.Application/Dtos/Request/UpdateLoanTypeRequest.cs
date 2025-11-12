@@ -9,5 +9,8 @@ namespace FirstLend.Application.Dtos.Request
 
         [Range(0.01, 100, ErrorMessage = "Interest rate must be between 0.01 and 100")]
         public decimal? Interest { get; set; }
+
+        [Range(1, 600, ErrorMessage = "Maximum term must be between 1 and 600 months")]
+        public int? MaxTermMonths { get; set; }
     }
 }

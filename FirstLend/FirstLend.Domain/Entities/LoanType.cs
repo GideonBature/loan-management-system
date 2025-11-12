@@ -12,5 +12,9 @@ namespace FirstLend.Domain.Entities
         public Guid Id { get; set; }
         public string Name { get; set; } = "";
         public decimal Interest { get; set; }
+        public int MaxTermMonths { get; set; } // Maximum loan term in months
+        public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }
