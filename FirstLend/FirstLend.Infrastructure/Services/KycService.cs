@@ -378,6 +378,12 @@ namespace FirstLend.Infrastructure.Services
                     user.KycVerificationDate = null;
                     user.BVN = "";
                     user.NIN = "";
+                    
+                    // Remove credit accounts when KYC is unverified
+                    var userCreditAccounts = _context.UserCreditAccounts.Where(uca => uca.UserId == userId);
+                    _context.UserCreditAccounts.RemoveRange(userCreditAccounts);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation($"Removed credit accounts for user {userId} due to KYC unverification");
                 }
 
                 var updateResult = await _userManager.UpdateAsync(user);

@@ -119,7 +119,7 @@ namespace FirstLend.Infrastructure.Services
         /// <summary>
         /// Assign random credit accounts to a user (called after KYC verification)
         /// </summary>
-        public async Task AssignRandomCreditAccountsAsync(string userId, int numberOfAccounts = 5)
+        public async Task AssignRandomCreditAccountsAsync(string userId, int numberOfAccounts = 3)
         {
             try
             {

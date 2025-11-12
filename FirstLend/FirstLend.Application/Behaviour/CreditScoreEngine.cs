@@ -70,8 +70,8 @@ public class CreditScoreEngine
 
             double penalty = 0.0;
             penalty += late * 0.05;
-            penalty += pending * 0.08;
-            penalty += missed * 0.20;
+            penalty += pending * 0.03;
+            penalty += missed * 0.10;
 
             double raw = goodRatio * 100.0 - penalty * 100.0;
             return Clamp(raw, 0, 100);
