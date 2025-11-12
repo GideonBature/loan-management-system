@@ -31,6 +31,23 @@ public class AdminUsersController : ControllerBase
     }
 
     /// <summary>
+    /// Generate account number from user ID (for display purposes)
+    /// Format: 309XXXXXXX where last 5 digits are masked
+    /// </summary>
+    private string GenerateAccountNumber(string userId)
+    {
+        // Get a numeric representation from the user ID
+        var hash = userId.GetHashCode();
+        var positiveHash = Math.Abs(hash);
+        
+        // Generate a 9-digit number starting with 309
+        var accountNumber = $"309{positiveHash:D6}".Substring(0, 9);
+        
+        // Mask last 5 digits for display: 3090XXXXX
+        return accountNumber.Substring(0, 4) + "XXXXX";
+    }
+
+    /// <summary>
     /// Get all users with pagination (Admin only)
     /// </summary>
     [HttpGet]
@@ -87,6 +104,7 @@ public class AdminUsersController : ControllerBase
                     Email = user.Email ?? "",
                     PhoneNumber = user.PhoneNumber ?? "",
                     Address = user.Address ?? "",
+                    AccountNumber = GenerateAccountNumber(user.Id),
                     UserType = user.UserType,
                     Status = user.Status,
                     CreatedAt = user.CreatedAt,
@@ -163,6 +181,7 @@ public class AdminUsersController : ControllerBase
                 Email = user.Email ?? "",
                 PhoneNumber = user.PhoneNumber ?? "",
                 Address = user.Address ?? "",
+                AccountNumber = GenerateAccountNumber(user.Id),
                 UserType = user.UserType,
                 Status = user.Status,
                 CreatedAt = user.CreatedAt,
@@ -265,6 +284,7 @@ public class AdminUsersController : ControllerBase
                 Email = newUser.Email ?? "",
                 PhoneNumber = newUser.PhoneNumber ?? "",
                 Address = newUser.Address ?? "",
+                AccountNumber = GenerateAccountNumber(newUser.Id),
                 UserType = newUser.UserType,
                 Status = newUser.Status,
                 CreatedAt = newUser.CreatedAt,
@@ -365,6 +385,7 @@ public class AdminUsersController : ControllerBase
                 Email = user.Email ?? "",
                 PhoneNumber = user.PhoneNumber ?? "",
                 Address = user.Address ?? "",
+                AccountNumber = GenerateAccountNumber(user.Id),
                 UserType = user.UserType,
                 Status = user.Status,
                 CreatedAt = user.CreatedAt,
@@ -450,6 +471,85 @@ public class AdminUsersController : ControllerBase
     }
 
     /// <summary>
+    /// Get loan history for a specific user (Admin only)
+    /// </summary>
+    [HttpGet("{userId}/loans")]
+    public async Task<IActionResult> GetUserLoanHistory(
+        string userId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new ServiceResponse<List<AdminLoanResponse>>
+                {
+                    Success = false,
+                    Message = "User not found",
+                    Code = "404",
+                    Data = null,
+                    Errors = new[] { "The requested user does not exist" }
+                });
+            }
+
+            var query = _context.Loans
+                .Include(l => l.LoanType)
+                .Where(l => l.BorrowerId == userId);
+
+            var totalCount = await query.CountAsync();
+            var loans = await query
+                .OrderByDescending(l => l.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var loanResponses = loans.Select(loan => new AdminLoanResponse
+            {
+                Id = loan.Id,
+                BorrowerId = loan.BorrowerId,
+                BorrowerName = $"{user.FirstName} {user.LastName}",
+                BorrowerEmail = user.Email ?? "",
+                LoanTypeName = loan.LoanType?.Name ?? "",
+                Principal = loan.Principal,
+                Rate = loan.Rate,
+                Term = loan.Term,
+                AmountDue = loan.AmountDue,
+                Status = loan.Status,
+                CreatedAt = loan.CreatedAt,
+                DueAt = loan.DueAt,
+                NextPaymentDate = loan.NextPaymentDate,
+                EmploymentStatus = loan.EmploymentStatus,
+                MonthlyIncome = loan.MonthlyIncome,
+                Purpose = loan.Purpose
+            }).ToList();
+
+            return Ok(new ServiceResponse<List<AdminLoanResponse>>
+            {
+                Success = true,
+                Message = "User loan history retrieved successfully",
+                Code = "200",
+                Data = loanResponses,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ServiceResponse<List<AdminLoanResponse>>
+            {
+                Success = false,
+                Message = "Error retrieving loan history",
+                Code = "500",
+                Data = null,
+                Errors = new[] { ex.Message }
+            });
+        }
+    }
+
+    /// <summary>
     /// Get users by role (Admin only)
     /// </summary>
     [HttpGet("role/{roleName}")]
@@ -506,6 +606,7 @@ public class AdminUsersController : ControllerBase
                     Email = user.Email ?? "",
                     PhoneNumber = user.PhoneNumber ?? "",
                     Address = user.Address ?? "",
+                    AccountNumber = GenerateAccountNumber(user.Id),
                     UserType = user.UserType,
                     Status = user.Status,
                     CreatedAt = user.CreatedAt,
