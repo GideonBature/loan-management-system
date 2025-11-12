@@ -1,6 +1,7 @@
 using FirstLend.Application.Abstractions;
 using FirstLend.Application.Dtos.Request;
 using FirstLend.Application.Dtos.Response;
+using FirstLend.Domain.Abstractions;
 using FirstLend.Domain.Entities;
 using FirstLend.Domain.Enums;
 using FirstLend.Infrastructure.Data;
@@ -14,11 +15,16 @@ namespace FirstLend.Infrastructure.Services
     {
         private readonly FirstLendDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ICreditScoreService _creditScoreService;
 
-        public LoanService(FirstLendDbContext context, UserManager<ApplicationUser> userManager)
+        public LoanService(
+            FirstLendDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            ICreditScoreService creditScoreService)
         {
             _context = context;
             _userManager = userManager;
+            _creditScoreService = creditScoreService;
         }
 
         public async Task<ServiceResponse<LoanResponse>> CreateAsync(string userId, CreateLoanRequest request)
@@ -36,6 +42,46 @@ namespace FirstLend.Infrastructure.Services
                         Code = "USER_NOT_FOUND",
                         Data = null,
                         Errors = new[] { $"User with ID '{userId}' does not exist in the system" }
+                    };
+                }
+
+                // Check if user has completed KYC verification
+                if (!user.KycVerified)
+                {
+                    return new ServiceResponse<LoanResponse>
+                    {
+                        Success = false,
+                        Message = "KYC verification required",
+                        Code = "KYC_NOT_VERIFIED",
+                        Data = null,
+                        Errors = new[] { "You must complete KYC verification before applying for a loan" }
+                    };
+                }
+
+                // Check user's credit score
+                var creditScoreResponse = await _creditScoreService.GetUserCreditScoreAsync(userId);
+                if (!creditScoreResponse.Success || creditScoreResponse.Data == null)
+                {
+                    return new ServiceResponse<LoanResponse>
+                    {
+                        Success = false,
+                        Message = "Unable to retrieve credit score",
+                        Code = "CREDIT_SCORE_ERROR",
+                        Data = null,
+                        Errors = new[] { "An error occurred while checking your credit score. Please try again later." }
+                    };
+                }
+
+                // Validate minimum credit score of 50%
+                if (creditScoreResponse.Data.Score < 50.0)
+                {
+                    return new ServiceResponse<LoanResponse>
+                    {
+                        Success = false,
+                        Message = "Insufficient credit score",
+                        Code = "CREDIT_SCORE_TOO_LOW",
+                        Data = null,
+                        Errors = new[] { $"Your credit score ({creditScoreResponse.Data.Score:F1}) is below the minimum requirement of 50. Please improve your credit history and try again." }
                     };
                 }
 

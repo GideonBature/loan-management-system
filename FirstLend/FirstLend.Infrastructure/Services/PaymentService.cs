@@ -193,54 +193,89 @@ namespace FirstLend.Infrastructure.Services
                         var paymentHistory = await _context.PaymentHistories
                             .FirstOrDefaultAsync(p => p.LoanId == loanId && p.UserId == userId && p.Status == "Pending");
 
-                        if (paymentHistory != null && data.status == "success")
+                        if (paymentHistory != null)
                         {
-                            var loan = await _context.Loans.FindAsync(loanId);
-                            
-                            if (loan != null)
+                            if (data.status == "success")
                             {
-                                // Calculate total interest for the loan
-                                var totalInterest = loan.AmountDue - loan.Principal;
+                                var loan = await _context.Loans.FindAsync(loanId);
                                 
-                                // Calculate how much interest is remaining
-                                var principalPaid = loan.Principal - loan.OutstandingBalance;
-                                var totalPaid = loan.Principal + totalInterest - loan.AmountDue;
-                                var interestPaid = totalPaid - principalPaid;
-                                var remainingInterest = Math.Max(0, totalInterest - interestPaid);
-                                
-                                // Apply payment: Interest first, then principal
-                                var interestPayment = Math.Min(remainingInterest, amount);
-                                var principalPayment = amount - interestPayment;
-
-                                paymentHistory.Status = "Success";
-                                paymentHistory.Amount = amount;
-                                paymentHistory.Interest = interestPayment;
-                                paymentHistory.Principal = principalPayment;
-
-                                // Update loan balances
-                                loan.AmountDue -= amount;
-                                loan.OutstandingBalance -= principalPayment;
-                                
-                                // Ensure balances don't go negative
-                                if (loan.OutstandingBalance < 0) loan.OutstandingBalance = 0;
-                                if (loan.AmountDue < 0) loan.AmountDue = 0;
-                                
-                                // If loan is fully paid (both must be <= 0)
-                                if (loan.AmountDue <= 0 && loan.OutstandingBalance <= 0)
+                                if (loan != null)
                                 {
-                                    loan.Status = Domain.Enums.LoanStatus.completed;
-                                    loan.AmountDue = 0;
-                                    loan.OutstandingBalance = 0;
+                                    // Calculate total interest for the loan
+                                    var totalInterest = loan.AmountDue - loan.Principal;
+                                    
+                                    // Calculate how much interest is remaining
+                                    var principalPaid = loan.Principal - loan.OutstandingBalance;
+                                    var totalPaid = loan.Principal + totalInterest - loan.AmountDue;
+                                    var interestPaid = totalPaid - principalPaid;
+                                    var remainingInterest = Math.Max(0, totalInterest - interestPaid);
+                                    
+                                    // Apply payment: Interest first, then principal
+                                    var interestPayment = Math.Min(remainingInterest, amount);
+                                    var principalPayment = amount - interestPayment;
+
+                                    paymentHistory.Status = "Success";
+                                    paymentHistory.Amount = amount;
+                                    paymentHistory.Interest = interestPayment;
+                                    paymentHistory.Principal = principalPayment;
+
+                                    // Update loan balances
+                                    loan.AmountDue -= amount;
+                                    loan.OutstandingBalance -= principalPayment;
+                                    
+                                    // Ensure balances don't go negative
+                                    if (loan.OutstandingBalance < 0) loan.OutstandingBalance = 0;
+                                    if (loan.AmountDue < 0) loan.AmountDue = 0;
+                                    
+                                    // If loan is fully paid (both must be <= 0)
+                                    if (loan.AmountDue <= 0 && loan.OutstandingBalance <= 0)
+                                    {
+                                        loan.Status = Domain.Enums.LoanStatus.completed;
+                                        loan.AmountDue = 0;
+                                        loan.OutstandingBalance = 0;
+                                    }
+
+                                    await _context.SaveChangesAsync();
                                 }
 
+                                return new PaymentVerificationResponse
+                                {
+                                    Success = true,
+                                    Message = "Payment verified successfully",
+                                    Amount = amount,
+                                    Status = data.status,
+                                    Reference = data.reference,
+                                    PaidAt = data.paid_at,
+                                    Channel = data.channel
+                                };
+                            }
+                            else
+                            {
+                                // Payment was declined, abandoned, or failed
+                                paymentHistory.Status = "Failed";
+                                paymentHistory.Amount = 0;
+                                paymentHistory.Interest = 0;
+                                paymentHistory.Principal = 0;
                                 await _context.SaveChangesAsync();
+
+                                return new PaymentVerificationResponse
+                                {
+                                    Success = false,
+                                    Message = $"Payment {data.status}",
+                                    Amount = amount,
+                                    Status = data.status,
+                                    Reference = data.reference,
+                                    PaidAt = data.paid_at,
+                                    Channel = data.channel
+                                };
                             }
                         }
 
+                        // If no pending payment history found, still return the Paystack status
                         return new PaymentVerificationResponse
                         {
-                            Success = true,
-                            Message = "Payment verified successfully",
+                            Success = data.status == "success",
+                            Message = data.status == "success" ? "Payment verified successfully" : $"Payment {data.status}",
                             Amount = amount,
                             Status = data.status,
                             Reference = data.reference,
