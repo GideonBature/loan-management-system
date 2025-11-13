@@ -1,86 +1,73 @@
-using FirstLend.Api.Middleware;
 using FirstLend.Infrastructure;
 using FirstLend.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using NLog;
-using NLog.Web;
 using System.Text;
 using System.Text.Json.Serialization;
 
-// Early init of NLog to allow startup and exception logging
-var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
-logger.Debug("init main");
+var builder = WebApplication.CreateBuilder(args);
 
-try
+// Add services to the container.
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen(options =>
 {
-    var builder = WebApplication.CreateBuilder(args);
-
-    // Clear default logging providers and use NLog
-    builder.Logging.ClearProviders();
-    builder.Host.UseNLog();
-
-    // Add services to the container.
-
-    builder.Services.AddControllers()
-        .AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        });
-    // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-    builder.Services.AddOpenApi();
-    builder.Services.AddSwaggerGen(options =>
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        options.SwaggerDoc("v1", new OpenApiInfo
-        {
-            Title = "FirstLend API",
-            Version = "v1",
-            Description = "FirstLend Loan Management System API"
-        });
+        Title = "FirstLend API",
+        Version = "v1",
+        Description = "FirstLend Loan Management System API"
+    });
 
-        // Add JWT Authentication to Swagger
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Name = "Authorization",
-            Type = SecuritySchemeType.Http,
-            Scheme = "bearer",
-            BearerFormat = "JWT",
-            In = ParameterLocation.Header,
-            Description = "Enter your JWT token in the text input below.\n\nExample: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        });
+    // Add JWT Authentication to Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token in the text input below.\n\nExample: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    });
 
-        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
+            new OpenApiSecurityScheme
             {
-                new OpenApiSecurityScheme
+                Reference = new OpenApiReference
                 {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
-                },
-                Array.Empty<string>()
-            }
-        });
-
-        // Enable Swagger Annotations
-        options.EnableAnnotations();
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 
-    // Configure CORS to allow all origins (for development)
-    builder.Services.AddCors(options =>
+    // Enable Swagger Annotations
+    options.EnableAnnotations();
+});
+
+// Configure CORS to allow all origins (for development)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
     {
-        options.AddPolicy("AllowAll", policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
+});
 
-    // Configure JWT Authentication
+// Configure JWT Authentication
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -129,16 +116,13 @@ try
     // add infrastructure layer
     builder.Services.AddInfrastructureServices(builder.Configuration);
 
-    var app = builder.Build();
+var app = builder.Build();
 
-    // Add Global Exception Middleware (must be first in pipeline)
-    app.UseMiddleware<GlobalExceptionMiddleware>();
-
-    // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.MapOpenApi();
-    }
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
 
     // Enable CORS
     app.UseCors("AllowAll");
@@ -157,23 +141,8 @@ try
     });
 
     app.MapControllers();
-    using (var scope = app.Services.CreateScope())
-    {
-        await Seeder.SeedMeAsync(scope.ServiceProvider);
-    }
-    
-    logger.Info("Application started successfully");
-    app.Run();
-
-}
-catch (Exception exception)
+using (var scope = app.Services.CreateScope())
 {
-    // NLog: catch setup errors
-    logger.Error(exception, "Stopped program because of exception");
-    throw;
+    await Seeder.SeedMeAsync(scope.ServiceProvider);
 }
-finally
-{
-    // Ensure to flush and stop internal timers/threads before application-exit
-    LogManager.Shutdown();
-}
+app.Run();

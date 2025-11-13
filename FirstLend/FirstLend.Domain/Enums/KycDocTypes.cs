@@ -7,9 +7,7 @@ namespace FirstLend.Domain.Enums
 {
     public enum KycDocTypes
     {
-        voters_card,
-        national_identity_card,
-        international_passport
-
+        government_issued_id,
+        proof_of_address
     }
 }

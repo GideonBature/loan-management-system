@@ -35,6 +35,7 @@ namespace FirstLend.Infrastructure
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<FirstLend.Domain.Abstractions.IKycService, KycService>();
             services.AddScoped<ICreditScoreService, CreditScoreService>();
+            services.AddScoped<ICloudinaryService, CloudinaryService>();
 
             // Register HttpClient for Paystack integration
             services.AddHttpClient();

@@ -22,6 +22,7 @@ namespace FirstLend.Infrastructure.Data
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         public DbSet<UserCreditAccount> UserCreditAccounts { get; set; }
         public DbSet<CreditAccount> CreditAccounts { get; set; }
+        public DbSet<KycDocument> KycDocuments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
