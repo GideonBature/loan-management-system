@@ -25,6 +25,7 @@ namespace FirstLend.Domain.Entities
         public string Purpose { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ApprovedAt { get; set; }
+        public DateTime? DisbursedAt { get; set; }
         public DateTime? ActivatedAt { get; set; }
         public DateTime DueAt { get; set; }
 

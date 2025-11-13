@@ -71,9 +71,12 @@ public class LoanTypeController : ControllerBase
     /// </summary>
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAllLoanTypes([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetAllLoanTypes(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 10, 
+        [FromQuery] bool? activeOnly = true)
     {
-        var response = await _loanTypeService.GetAllAsync(page, pageSize);
+        var response = await _loanTypeService.GetAllAsync(page, pageSize, activeOnly);
         return Ok(response);
     }
 

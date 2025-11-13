@@ -10,24 +10,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FirstLend.Api.Controllers.Admin;
 
-[ApiController]
-[Route("api/admin/dashboard")]
-[Authorize(Roles = "Admin")]
-public class AdminDashboardController : ControllerBase
-{
-    private readonly FirstLendDbContext _context;
-    private readonly UserManager<ApplicationUser> _userManager;
-
-    public AdminDashboardController(FirstLendDbContext context, UserManager<ApplicationUser> userManager)
+    [ApiController]
+    [Route("api/admin/dashboard")]
+    [Authorize(Roles = "Admin")]
+    public class AdminDashboardController : ControllerBase
     {
-        _context = context;
-        _userManager = userManager;
-    }
+        private readonly FirstLendDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IGeminiService _geminiService;
 
-    /// <summary>
+        public AdminDashboardController(
+            FirstLendDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            IGeminiService geminiService)
+        {
+            _context = context;
+            _userManager = userManager;
+            _geminiService = geminiService;
+        }    /// <summary>
     /// Get dashboard summary statistics with date filters (Admin only)
     /// </summary>
     [HttpGet("summary")]
+    [ProducesResponseType(typeof(ServiceResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDashboardSummary([FromQuery] string period = "month")
     {
         try
@@ -386,6 +390,188 @@ public class AdminDashboardController : ControllerBase
             {
                 Success = false,
                 Message = "Error retrieving user statistics",
+                Code = "500",
+                Data = null,
+                Errors = new[] { ex.Message }
+            });
+        }
+    }
+
+    /// <summary>
+    /// Get AI-powered insights (Admin only)
+    /// </summary>
+    [HttpGet("ai-insights")]
+    public async Task<IActionResult> GetAiInsights([FromQuery] string mode = "HighConfidence")
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            
+            // Get current month data
+            var totalApplications = await _context.Loans
+                .CountAsync(l => l.CreatedAt >= startOfMonth);
+            
+            var totalDisbursed = await _context.Loans
+                .Where(l => l.DisbursedAt >= startOfMonth && l.Status == LoanStatus.active)
+                .SumAsync(l => l.Principal);
+            
+            var totalOutstanding = await _context.Loans
+                .Where(l => l.Status == LoanStatus.active)
+                .SumAsync(l => l.AmountDue);
+
+            var approvedLoans = await _context.Loans
+                .CountAsync(l => l.CreatedAt >= startOfMonth && 
+                                (l.Status == LoanStatus.approved || l.Status == LoanStatus.active));
+
+            var rejectedLoans = await _context.Loans
+                .CountAsync(l => l.CreatedAt >= startOfMonth && l.Status == LoanStatus.rejected);
+
+            var overdueLoans = await _context.Loans
+                .CountAsync(l => l.Status == LoanStatus.active && l.DueAt < now);
+
+            var approvalRate = totalApplications > 0 ? (double)approvedLoans / totalApplications * 100 : 0;
+
+            // Get previous month data for comparison
+            var startOfLastMonth = startOfMonth.AddMonths(-1);
+            var lastMonthApplications = await _context.Loans
+                .CountAsync(l => l.CreatedAt >= startOfLastMonth && l.CreatedAt < startOfMonth);
+            
+            var lastMonthDisbursed = await _context.Loans
+                .Where(l => l.DisbursedAt >= startOfLastMonth && 
+                           l.DisbursedAt < startOfMonth && 
+                           l.Status == LoanStatus.active)
+                .SumAsync(l => l.Principal);
+
+            var growthRate = lastMonthApplications > 0
+                ? ((totalApplications - lastMonthApplications) * 100.0 / lastMonthApplications)
+                : 0;
+
+            // Prepare comprehensive data context for Gemini
+            string dataContext = $@"
+FirstLend Loan Management System - Financial Analysis Data
+
+CURRENT MONTH ({now:MMMM yyyy}):
+- Total Applications: {totalApplications}
+- Total Disbursed: ₦{totalDisbursed:N2}
+- Total Outstanding: ₦{totalOutstanding:N2}
+- Approved Loans: {approvedLoans}
+- Rejected Loans: {rejectedLoans}
+- Overdue Loans: {overdueLoans}
+- Approval Rate: {approvalRate:F1}%
+
+PREVIOUS MONTH COMPARISON:
+- Last Month Applications: {lastMonthApplications}
+- Last Month Disbursed: ₦{lastMonthDisbursed:N2}
+- Growth Rate: {growthRate:F1}%
+
+KEY METRICS:
+- Risk Level: {(totalOutstanding > totalDisbursed * 0.9m ? "HIGH" : totalOutstanding > totalDisbursed * 0.7m ? "MODERATE" : "LOW")}
+- Utilization Rate: {(totalDisbursed > 0 ? (totalOutstanding / totalDisbursed * 100) : 0):F1}%
+- Default Risk: {(approvedLoans > 0 ? ((double)overdueLoans / approvedLoans * 100) : 0):F1}%
+";
+
+            string prompt;
+            var tags = new List<string>();
+            var metrics = new Dictionary<string, object>();
+
+            if (mode == "PredictiveAnalytics")
+            {
+                // Predictive Analytics Mode
+                prompt = $@"You are FirstLend's AI Financial Analyst. Analyze the data and provide a PREDICTIVE insight.
+
+{dataContext}
+
+Generate ONE concise paragraph (2-3 sentences, max 60 words) that:
+1. Forecasts next month's trends based on growth rate
+2. Predicts potential risks or opportunities
+3. Provides actionable recommendations
+
+Start with: 'Based on current trends, loan applications are expected to...'
+Be specific with numbers and confident in predictions.";
+
+                tags.Add("Predictive Analytics");
+                
+                var predictedApplications = (int)(totalApplications * (1 + growthRate / 100));
+                var predictedDisbursement = totalDisbursed * (decimal)(1 + growthRate / 100);
+                
+                metrics["predictedApplications"] = predictedApplications;
+                metrics["predictedDisbursement"] = predictedDisbursement;
+                metrics["trendDirection"] = growthRate > 0 ? "upward" : "downward";
+                metrics["confidence"] = Math.Min(95, 70 + Math.Abs(growthRate));
+                metrics["growthRate"] = Math.Round(growthRate, 1);
+            }
+            else
+            {
+                // High Confidence Mode
+                prompt = $@"You are FirstLend's AI Financial Analyst. Analyze the data and provide a HIGH-CONFIDENCE insight.
+
+{dataContext}
+
+Generate ONE concise paragraph (2-3 sentences, max 60 words) that:
+1. Summarizes current month's operational performance
+2. Assesses risk based on outstanding vs disbursed amounts
+3. Evaluates approval rate and provides recommendations
+
+Start with: 'Loan operations processed {totalApplications} new applications this month...'
+Be factual, data-driven, and include specific numbers.";
+
+                tags.Add("High Confidence");
+                
+                var riskLevel = totalOutstanding > totalDisbursed * 0.9m ? "high" : 
+                               totalOutstanding > totalDisbursed * 0.7m ? "moderate" : "low";
+                
+                metrics["riskLevel"] = riskLevel;
+                metrics["approvalRate"] = Math.Round(approvalRate, 1);
+                metrics["utilizationRate"] = totalDisbursed > 0 ? Math.Round((double)(totalOutstanding / totalDisbursed * 100), 1) : 0;
+                metrics["defaultRisk"] = approvedLoans > 0 ? Math.Round((double)overdueLoans / approvedLoans * 100, 1) : 0;
+                metrics["totalApplications"] = totalApplications;
+                metrics["totalDisbursed"] = totalDisbursed;
+                metrics["totalOutstanding"] = totalOutstanding;
+            }
+
+            // Call Gemini AI to generate insight
+            var geminiInsight = await _geminiService.AnalyzeLoanDataAsync(prompt);
+
+            // Fallback if Gemini fails
+            if (string.IsNullOrWhiteSpace(geminiInsight))
+            {
+                if (mode == "PredictiveAnalytics")
+                {
+                    var predictedApplications = (int)(totalApplications * (1 + growthRate / 100));
+                    geminiInsight = $"Based on current trends, loan applications are expected to {(growthRate > 0 ? "increase" : "decrease")} by {Math.Abs(Math.Round(growthRate, 1))}% next month. " +
+                                  $"Projected: {predictedApplications} applications with ₦{(totalDisbursed * (decimal)(1 + growthRate / 100)):N0} disbursement.";
+                }
+                else
+                {
+                    var riskLevel = totalOutstanding > totalDisbursed * 0.9m ? "high" : "moderate";
+                    geminiInsight = $"Loan operations processed {totalApplications} new applications this month, disbursing ₦{totalDisbursed:N0} " +
+                                  $"while keeping outstanding exposure at ₦{totalOutstanding:N0}. Risk level: {riskLevel}.";
+                }
+            }
+
+            var response = new AiInsightsResponse
+            {
+                Insight = geminiInsight,
+                Mode = mode,
+                Tags = tags,
+                Metrics = metrics
+            };
+
+            return Ok(new ServiceResponse<AiInsightsResponse>
+            {
+                Success = true,
+                Message = "AI insights generated successfully",
+                Code = "200",
+                Data = response
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ServiceResponse<AiInsightsResponse>
+            {
+                Success = false,
+                Message = "Error generating AI insights",
                 Code = "500",
                 Data = null,
                 Errors = new[] { ex.Message }

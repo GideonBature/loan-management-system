@@ -128,12 +128,20 @@ namespace FirstLend.Infrastructure.Services
             }
         }
 
-        public async Task<ServiceResponse<List<LoanTypeResponse>>> GetAllAsync(int page = 1, int pageSize = 10)
+        public async Task<ServiceResponse<List<LoanTypeResponse>>> GetAllAsync(int page = 1, int pageSize = 10, bool? activeOnly = null)
         {
             try
             {
-                var totalCount = await _context.LoanTypes.CountAsync();
-                var loanTypes = await _context.LoanTypes
+                var query = _context.LoanTypes.AsQueryable();
+
+                // Filter by active status if specified
+                if (activeOnly.HasValue && activeOnly.Value)
+                {
+                    query = query.Where(lt => lt.IsActive);
+                }
+
+                var totalCount = await query.CountAsync();
+                var loanTypes = await query
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();

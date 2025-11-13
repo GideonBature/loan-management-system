@@ -42,9 +42,6 @@ namespace FirstLend.Infrastructure
             // Register HttpClient for Mono API integration
             services.AddHttpClient<KycService>();
 
-            // Register background services
-            services.AddHostedService<LoanActivationService>();
-
             // Register Gemini AI service (Google GenAI)
             services.AddSingleton<IGeminiService, GeminiService>();
 

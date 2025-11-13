@@ -48,6 +48,104 @@ public class AdminUsersController : ControllerBase
     }
 
     /// <summary>
+    /// Get all admin users for admin user management page (Admin only)
+    /// </summary>
+    [HttpGet("admins")]
+    public async Task<IActionResult> GetAllAdminUsers(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? role = null,
+        [FromQuery] string? status = null)
+    {
+        try
+        {
+            // Get all users and filter out customers (only get admin-type users)
+            var allUsers = await _userManager.Users.ToListAsync();
+            var adminUsers = new List<ApplicationUser>();
+
+            foreach (var user in allUsers)
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                // Include users who have any role OTHER than Customer, or have multiple roles
+                if (!userRoles.Contains("Customer") || userRoles.Count > 1)
+                {
+                    adminUsers.Add(user);
+                }
+            }
+            
+            var query = adminUsers.AsQueryable();
+
+            // Filter by specific role if provided
+            if (!string.IsNullOrEmpty(role))
+            {
+                var filteredByRole = new List<ApplicationUser>();
+                foreach (var user in query)
+                {
+                    var userRoles = await _userManager.GetRolesAsync(user);
+                    if (userRoles.Contains(role))
+                    {
+                        filteredByRole.Add(user);
+                    }
+                }
+                query = filteredByRole.AsQueryable();
+            }
+
+            // Filter by status if provided
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<UserStatus>(status, out var userStatus))
+            {
+                query = query.Where(u => u.Status == userStatus);
+            }
+
+            var totalCount = query.Count();
+            var users = query
+                .OrderByDescending(u => u.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var adminResponses = new List<object>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var primaryRole = roles.FirstOrDefault() ?? "Admin";
+
+                adminResponses.Add(new
+                {
+                    Id = user.Id,
+                    FullName = $"{user.FirstName} {user.LastName}",
+                    Email = user.Email ?? "",
+                    Role = primaryRole,
+                    Status = user.Status.ToString(),
+                    LastLogin = user.LastLoginAt,
+                    CreatedAt = user.CreatedAt
+                });
+            }
+
+            return Ok(new ServiceResponse<List<object>>
+            {
+                Success = true,
+                Message = "Admin users retrieved successfully",
+                Code = "200",
+                Data = adminResponses,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ServiceResponse<List<object>>
+            {
+                Success = false,
+                Message = "Error retrieving admin users",
+                Code = "500",
+                Data = null,
+                Errors = new[] { ex.Message }
+            });
+        }
+    }
+
+    /// <summary>
     /// Get all users with pagination (Admin only)
     /// </summary>
     [HttpGet]
@@ -277,8 +375,16 @@ public class AdminUsersController : ControllerBase
                 });
             }
 
-            // Assign Admin role by default for admin-created users
-            await _userManager.AddToRoleAsync(newUser, "Admin");
+            // Assign role from request (default to Admin if not specified)
+            var roleToAssign = string.IsNullOrEmpty(request.Role) ? "Admin" : request.Role;
+            
+            // Check if role exists, if not, create it
+            if (!await _roleManager.RoleExistsAsync(roleToAssign))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(roleToAssign));
+            }
+            
+            await _userManager.AddToRoleAsync(newUser, roleToAssign);
 
             var totalLoans = 0;
             var totalBorrowed = 0m;

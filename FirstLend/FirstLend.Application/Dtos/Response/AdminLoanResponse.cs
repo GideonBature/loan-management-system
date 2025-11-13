@@ -22,6 +22,9 @@ namespace FirstLend.Application.Dtos.Response
         public LoanStatus Status { get; set; }
         
         public DateTime CreatedAt { get; set; }
+        public DateTime? ApprovedAt { get; set; }
+        public DateTime? DisbursedAt { get; set; }
+        public DateTime? ActivatedAt { get; set; }
         public DateTime NextPaymentDate { get; set; }
         public DateTime DueAt { get; set; }
     }
