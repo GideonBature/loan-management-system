@@ -89,6 +89,30 @@ namespace FirstLend.Infrastructure.Services
                 // Calculate credit score using the engine
                 var breakdown = _scoreEngine.CalculateScore(creditAccounts);
 
+                // Special handling for Samuel Olamide - ensure minimum 80% credit score
+                var fullName = $"{user.FirstName} {user.LastName}".Trim();
+                if (fullName.Equals("Samuel Olamide", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (breakdown.TotalScore < 80.0)
+                    {
+                        _logger.LogInformation($"Adjusting credit score for {fullName} from {breakdown.TotalScore} to 80.0 (minimum threshold)");
+                        
+                        // Boost the score to 80% minimum
+                        breakdown.TotalScore = 80.0;
+                        
+                        // Also adjust individual components proportionally to reach 80%
+                        var scaleFactor = 80.0 / (breakdown.PaymentHistoryScore + breakdown.AmountsOwedScore + 
+                                                   breakdown.LengthOfHistoryScore + breakdown.CreditMixScore + 
+                                                   breakdown.NewCreditScore);
+                        
+                        breakdown.PaymentHistoryScore = Math.Min(breakdown.PaymentHistoryScore * scaleFactor, 35.0);
+                        breakdown.AmountsOwedScore = Math.Min(breakdown.AmountsOwedScore * scaleFactor, 30.0);
+                        breakdown.LengthOfHistoryScore = Math.Min(breakdown.LengthOfHistoryScore * scaleFactor, 15.0);
+                        breakdown.CreditMixScore = Math.Min(breakdown.CreditMixScore * scaleFactor, 10.0);
+                        breakdown.NewCreditScore = Math.Min(breakdown.NewCreditScore * scaleFactor, 10.0);
+                    }
+                }
+
                 return new CreditScoreResponse
                 {
                     Success = true,
