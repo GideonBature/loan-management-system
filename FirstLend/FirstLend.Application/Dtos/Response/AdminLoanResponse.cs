@@ -27,5 +27,9 @@ namespace FirstLend.Application.Dtos.Response
         public DateTime? ActivatedAt { get; set; }
         public DateTime NextPaymentDate { get; set; }
         public DateTime DueAt { get; set; }
+        
+        // KYC Document URLs for verification
+        public string? BankStatementUrl { get; set; }
+        public string? GuarantorDocumentUrl { get; set; }
     }
 }

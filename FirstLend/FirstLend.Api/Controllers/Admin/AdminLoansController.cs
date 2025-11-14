@@ -47,6 +47,48 @@ public class AdminLoansController : ControllerBase
     }
 
     /// <summary>
+    /// Build AdminLoanResponse with KYC documents
+    /// </summary>
+    private async Task<AdminLoanResponse> BuildAdminLoanResponseAsync(Domain.Entities.Loan loan, ApplicationUser? borrower)
+    {
+        // Get KYC documents for the borrower
+        var bankStatement = await _context.KycDocuments
+            .Where(d => d.UserId == loan.BorrowerId && d.DocumentType == Domain.Enums.KycDocTypes.bank_statement)
+            .OrderByDescending(d => d.UploadedAt)
+            .FirstOrDefaultAsync();
+
+        var guarantorDoc = await _context.KycDocuments
+            .Where(d => d.UserId == loan.BorrowerId && d.DocumentType == Domain.Enums.KycDocTypes.guarantor_document)
+            .OrderByDescending(d => d.UploadedAt)
+            .FirstOrDefaultAsync();
+
+        return new AdminLoanResponse
+        {
+            Id = loan.Id,
+            BorrowerName = borrower?.UserName ?? "Unknown",
+            BorrowerEmail = borrower?.Email ?? "Unknown",
+            BorrowerId = loan.BorrowerId,
+            Principal = loan.Principal,
+            AmountDue = loan.AmountDue,
+            LoanTypeName = loan.LoanType?.Name ?? "",
+            Rate = loan.Rate,
+            Term = loan.Term,
+            EmploymentStatus = loan.EmploymentStatus,
+            MonthlyIncome = loan.MonthlyIncome,
+            Purpose = loan.Purpose,
+            Status = loan.Status,
+            CreatedAt = loan.CreatedAt,
+            ApprovedAt = loan.ApprovedAt,
+            DisbursedAt = loan.DisbursedAt,
+            ActivatedAt = loan.ActivatedAt,
+            NextPaymentDate = loan.NextPaymentDate,
+            DueAt = loan.DueAt,
+            BankStatementUrl = bankStatement?.DocumentUrl,
+            GuarantorDocumentUrl = guarantorDoc?.DocumentUrl
+        };
+    }
+
+    /// <summary>
     /// Get all loans with optional status filter, search by applicant name/ID, and sorting (Admin only)
     /// </summary>
     [HttpGet]
@@ -114,25 +156,8 @@ public class AdminLoansController : ControllerBase
                     }
                 }
 
-                loanResponses.Add(new AdminLoanResponse
-                {
-                    Id = loan.Id,
-                    BorrowerName = borrower?.UserName ?? "Unknown",
-                    BorrowerEmail = borrower?.Email ?? "Unknown",
-                    BorrowerId = loan.BorrowerId,
-                    Principal = loan.Principal,
-                    AmountDue = loan.AmountDue,
-                    LoanTypeName = loan.LoanType?.Name ?? "",
-                    Rate = loan.Rate,
-                    Term = loan.Term,
-                    EmploymentStatus = loan.EmploymentStatus,
-                    MonthlyIncome = loan.MonthlyIncome,
-                    Purpose = loan.Purpose,
-                    Status = loan.Status,
-                    CreatedAt = loan.CreatedAt,
-                    NextPaymentDate = loan.NextPaymentDate,
-                    DueAt = loan.DueAt
-                });
+                var loanResponse = await BuildAdminLoanResponseAsync(loan, borrower);
+                loanResponses.Add(loanResponse);
             }
 
             // Recalculate total count if search filter was applied
