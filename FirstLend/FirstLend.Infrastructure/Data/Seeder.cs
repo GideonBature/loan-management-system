@@ -25,7 +25,7 @@ namespace FirstLend.Infrastructure.Data
             // Ensure database is created
             await context.Database.MigrateAsync();
             
-            var roles = new string[] { "Admin", "Customer" };
+            var roles = new string[] { "Admin", "Customer", "Super Admin", "Support", "Loan Officer", "Auditor" };
             try
             {
                 // Create roles if they don't exist or fix casing if wrong
@@ -54,28 +54,35 @@ namespace FirstLend.Infrastructure.Data
                 }
 
                 // Seed default admin user
-                var existingAdmin = await userManager.FindByEmailAsync("admin@email.com");
-                if (existingAdmin == null)
+                var adminEmail = "admin@firstlend.com";
+                var adminUser = await userManager.FindByEmailAsync(adminEmail);
+                
+                if (adminUser == null)
                 {
-                    var adminUser = new ApplicationUser
+                    // Create default admin user if not exists
+                    adminUser = new ApplicationUser
                     {
-                        UserName = "admin@email.com",
-                        Email = "admin@email.com",
-                        FirstName = "Admin",
-                        LastName = "User",
-                        PhoneNumber = "+234-admin",
-                        Address = "Admin Office",
+                        UserName = adminEmail,
+                        Email = adminEmail,
+                        EmailConfirmed = true,
+                        PhoneNumber = "08012345678",
+                        PhoneNumberConfirmed = true,
+                        FirstName = "FirstLend",
+                        LastName = "Admin",
+                        Address = "FirstLend Headquarters",
                         UserType = UserType.Admin,
                         Status = UserStatus.Active,
-                        CreatedAt = DateTime.UtcNow,
-                        EmailConfirmed = true
+                        EmailVerified = true,
+                        KycVerified = true,
+                        CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
+                        UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
                     };
 
                     var result = await userManager.CreateAsync(adminUser, "Admin@123");
                     if (result.Succeeded)
                     {
-                        await userManager.AddToRoleAsync(adminUser, "Admin");
-                        Console.WriteLine("✅ Default admin user created: admin@email.com / Admin@123");
+                        await userManager.AddToRoleAsync(adminUser, "Super Admin");
+                        Console.WriteLine("✅ Default admin user created successfully with Super Admin role.");
                     }
                     else
                     {
@@ -84,19 +91,54 @@ namespace FirstLend.Infrastructure.Data
                 }
                 else
                 {
-                    // Ensure existing admin has the correct role
-                    var userRoles = await userManager.GetRolesAsync(existingAdmin);
-                    if (!userRoles.Contains("Admin"))
+                    // Admin exists - ensure it's active and has correct settings
+                    bool needsUpdate = false;
+                    
+                    if (adminUser.Status != UserStatus.Active)
                     {
-                        // Remove any incorrect role casing
-                        if (userRoles.Contains("admin"))
-                        {
-                            await userManager.RemoveFromRoleAsync(existingAdmin, "admin");
-                        }
-                        await userManager.AddToRoleAsync(existingAdmin, "Admin");
-                        Console.WriteLine("✅ Updated admin user role to proper casing");
+                        adminUser.Status = UserStatus.Active;
+                        needsUpdate = true;
+                        Console.WriteLine("✅ Admin account status updated to Active.");
                     }
-                    Console.WriteLine("✓ Admin user already exists with correct role");
+                    
+                    if (!adminUser.EmailVerified)
+                    {
+                        adminUser.EmailVerified = true;
+                        needsUpdate = true;
+                    }
+                    
+                    if (!adminUser.EmailConfirmed)
+                    {
+                        adminUser.EmailConfirmed = true;
+                        needsUpdate = true;
+                    }
+                    
+                    if (adminUser.FirstName != "FirstLend" || adminUser.LastName != "Admin")
+                    {
+                        adminUser.FirstName = "FirstLend";
+                        adminUser.LastName = "Admin";
+                        needsUpdate = true;
+                    }
+                    
+                    if (needsUpdate)
+                    {
+                        await userManager.UpdateAsync(adminUser);
+                        Console.WriteLine("✅ Admin account updated successfully.");
+                    }
+                    
+                    // Ensure Super Admin role
+                    if (!await userManager.IsInRoleAsync(adminUser, "Super Admin"))
+                    {
+                        // Remove old Admin role if exists
+                        if (await userManager.IsInRoleAsync(adminUser, "Admin"))
+                        {
+                            await userManager.RemoveFromRoleAsync(adminUser, "Admin");
+                        }
+                        await userManager.AddToRoleAsync(adminUser, "Super Admin");
+                        Console.WriteLine("✅ Super Admin role added to admin account.");
+                    }
+                    
+                    Console.WriteLine("✓ Admin account already exists and is now active with Super Admin role.");
                 }
 
                 // Seed loan types

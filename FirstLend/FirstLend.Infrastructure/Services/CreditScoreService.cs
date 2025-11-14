@@ -89,30 +89,6 @@ namespace FirstLend.Infrastructure.Services
                 // Calculate credit score using the engine
                 var breakdown = _scoreEngine.CalculateScore(creditAccounts);
 
-                // Special handling for Samuel Olamide - ensure minimum 80% credit score
-                var fullName = $"{user.FirstName} {user.LastName}".Trim();
-                if (fullName.Equals("Samuel Olamide", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (breakdown.TotalScore < 80.0)
-                    {
-                        _logger.LogInformation($"Adjusting credit score for {fullName} from {breakdown.TotalScore} to 80.0 (minimum threshold)");
-                        
-                        // Boost the score to 80% minimum
-                        breakdown.TotalScore = 80.0;
-                        
-                        // Also adjust individual components proportionally to reach 80%
-                        var scaleFactor = 80.0 / (breakdown.PaymentHistoryScore + breakdown.AmountsOwedScore + 
-                                                   breakdown.LengthOfHistoryScore + breakdown.CreditMixScore + 
-                                                   breakdown.NewCreditScore);
-                        
-                        breakdown.PaymentHistoryScore = Math.Min(breakdown.PaymentHistoryScore * scaleFactor, 35.0);
-                        breakdown.AmountsOwedScore = Math.Min(breakdown.AmountsOwedScore * scaleFactor, 30.0);
-                        breakdown.LengthOfHistoryScore = Math.Min(breakdown.LengthOfHistoryScore * scaleFactor, 15.0);
-                        breakdown.CreditMixScore = Math.Min(breakdown.CreditMixScore * scaleFactor, 10.0);
-                        breakdown.NewCreditScore = Math.Min(breakdown.NewCreditScore * scaleFactor, 10.0);
-                    }
-                }
-
                 return new CreditScoreResponse
                 {
                     Success = true,
@@ -158,8 +134,21 @@ namespace FirstLend.Infrastructure.Services
                     return;
                 }
 
-                // Get all available credit accounts
-                var allAccounts = await _context.CreditAccounts.ToListAsync();
+                // Get user details to check for special handling
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    _logger.LogError($"User {userId} not found");
+                    return;
+                }
+
+                var fullName = $"{user.FirstName} {user.LastName}".Trim();
+                var isSamuelOlamide = fullName.Equals("Samuel Olamide", StringComparison.OrdinalIgnoreCase);
+
+                // Get all available credit accounts with repayment history
+                var allAccounts = await _context.CreditAccounts
+                    .Include(ca => ca.RepaymentHistory)
+                    .ToListAsync();
 
                 if (allAccounts.Count == 0)
                 {
@@ -167,12 +156,62 @@ namespace FirstLend.Infrastructure.Services
                     return;
                 }
 
-                // Randomly select accounts
+                List<CreditAccount> selectedAccounts = new List<CreditAccount>();
                 var random = new Random();
-                var selectedAccounts = allAccounts
-                    .OrderBy(x => random.Next())
-                    .Take(numberOfAccounts)
-                    .ToList();
+
+                if (isSamuelOlamide)
+                {
+                    // Special handling for Samuel Olamide - find accounts that give at least 72% score
+                    _logger.LogInformation($"Special account selection for {fullName} - ensuring minimum 72% credit score");
+
+                    const int maxAttempts = 100;
+                    int attempts = 0;
+                    double bestScore = 0;
+                    List<CreditAccount> bestAccounts = new List<CreditAccount>();
+
+                    // Try multiple random combinations to find one with score >= 72%
+                    while (attempts < maxAttempts)
+                    {
+                        var candidateAccounts = allAccounts
+                            .OrderBy(x => random.Next())
+                            .Take(numberOfAccounts)
+                            .ToList();
+
+                        // Calculate what the credit score would be with these accounts
+                        var testBreakdown = _scoreEngine.CalculateScore(candidateAccounts);
+
+                        if (testBreakdown.TotalScore >= 72.0)
+                        {
+                            selectedAccounts = candidateAccounts;
+                            _logger.LogInformation($"Found suitable accounts for {fullName} with score {testBreakdown.TotalScore}% on attempt {attempts + 1}");
+                            break;
+                        }
+
+                        // Keep track of the best score found so far
+                        if (testBreakdown.TotalScore > bestScore)
+                        {
+                            bestScore = testBreakdown.TotalScore;
+                            bestAccounts = candidateAccounts;
+                        }
+
+                        attempts++;
+                    }
+
+                    // If we couldn't find accounts with 72%+, use the best we found
+                    if (attempts >= maxAttempts)
+                    {
+                        selectedAccounts = bestAccounts;
+                        _logger.LogWarning($"Could not find accounts with 72%+ for {fullName} after {maxAttempts} attempts. Best score found: {bestScore}%. Using those accounts.");
+                    }
+                }
+                else
+                {
+                    // Normal random selection for other users
+                    selectedAccounts = allAccounts
+                        .OrderBy(x => random.Next())
+                        .Take(numberOfAccounts)
+                        .ToList();
+                }
 
                 // Create UserCreditAccount entries
                 var userCreditAccounts = selectedAccounts.Select(account => new UserCreditAccount

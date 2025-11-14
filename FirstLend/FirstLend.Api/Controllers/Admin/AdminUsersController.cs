@@ -13,7 +13,7 @@ namespace FirstLend.Api.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/users")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Super Admin,Loan Officer,Auditor")]
 public class AdminUsersController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;

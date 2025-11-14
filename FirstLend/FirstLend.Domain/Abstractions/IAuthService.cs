@@ -6,6 +6,8 @@ namespace FirstLend.Domain.Abstractions
     public interface IAuthService
     {
         Task<AuthResponse> RegisterAsync(RegisterRequest request);
+        Task<AuthResponse> VerifyEmailAsync(VerifyEmailRequest request);
+        Task<AuthResponse> ResendOtpAsync(ResendOtpRequest request);
         Task<AuthResponse> LoginAsync(LoginRequest request);
         Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request);
         Task<AuthResponse> LogoutAsync(string userId);

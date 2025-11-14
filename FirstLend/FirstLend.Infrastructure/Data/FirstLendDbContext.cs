@@ -23,6 +23,7 @@ namespace FirstLend.Infrastructure.Data
         public DbSet<UserCreditAccount> UserCreditAccounts { get; set; }
         public DbSet<CreditAccount> CreditAccounts { get; set; }
         public DbSet<KycDocument> KycDocuments { get; set; }
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

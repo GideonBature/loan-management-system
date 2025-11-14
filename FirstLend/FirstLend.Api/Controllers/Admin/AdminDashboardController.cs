@@ -12,7 +12,7 @@ namespace FirstLend.Api.Controllers.Admin;
 
     [ApiController]
     [Route("api/admin/dashboard")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Super Admin,Loan Officer,Auditor")]
     public class AdminDashboardController : ControllerBase
     {
         private readonly FirstLendDbContext _context;

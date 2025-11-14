@@ -1,12 +1,14 @@
 using FirstLend.Domain.Abstractions;
 using FirstLend.Domain.Dtos.Request;
 using FirstLend.Domain.Dtos.Response;
+using FirstLend.Domain.Entities;
 using FirstLend.Domain.Enums;
 using FirstLend.Infrastructure.Data;
 using FirstLend.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -21,17 +23,26 @@ namespace FirstLend.Infrastructure.Services
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly FirstLendDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<AuthService> _logger;
+        
+        // Bypass OTP code based on today's date: November 14, 2025 = 141125
+        private const string BYPASS_OTP = "141125";
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             FirstLendDbContext context,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IEmailService emailService,
+            ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
             _configuration = configuration;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -62,7 +73,10 @@ namespace FirstLend.Infrastructure.Services
                     };
                 }
 
-                // Create new user
+                // Generate 6-digit OTP
+                var otp = GenerateOtp();
+                
+                // Create temporary user (not yet verified)
                 var user = new ApplicationUser
                 {
                     UserName = request.Email,
@@ -72,7 +86,7 @@ namespace FirstLend.Infrastructure.Services
                     LastName = string.Join(" ", request.FullName.Split(' ').Skip(1)),
                     Address = request.Address,
                     UserType = UserType.Customer,
-                    Status = UserStatus.Active,
+                    Status = UserStatus.Pending, // Set to Pending until email is verified
                     EmailVerified = false,
                     PhoneVerified = false
                 };
@@ -96,6 +110,33 @@ namespace FirstLend.Infrastructure.Services
                 // Assign Customer role to new user
                 await _userManager.AddToRoleAsync(user, "Customer");
 
+                // Save OTP to database
+                var otpToken = new EmailVerificationToken
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    Email = user.Email!,
+                    Token = otp,
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                    IsUsed = false
+                };
+
+                await _context.EmailVerificationTokens.AddAsync(otpToken);
+                await _context.SaveChangesAsync();
+
+                // Send OTP email
+                var emailSent = await _emailService.SendEmailVerificationOtpAsync(
+                    user.Email!, 
+                    request.FullName, 
+                    otp
+                );
+
+                if (!emailSent)
+                {
+                    _logger.LogWarning($"Failed to send OTP email to {user.Email}, but registration continued");
+                }
+
                 var response = new RegisterResponse
                 {
                     UserId = user.Id,
@@ -107,12 +148,14 @@ namespace FirstLend.Infrastructure.Services
                 return new AuthResponse
                 {
                     Success = true,
-                    Message = "Registration successful. Please log in.",
+                    Message = $"Registration successful! Please check {user.Email} for the OTP code to verify your email. (Demo bypass code: {BYPASS_OTP})",
+                    Code = "OTP_SENT",
                     Data = response
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error during registration");
                 return new AuthResponse
                 {
                     Success = false,
@@ -431,6 +474,194 @@ namespace FirstLend.Infrastructure.Services
             using var rng = RandomNumberGenerator.Create();
             rng.GetBytes(randomBytes);
             return Convert.ToBase64String(randomBytes);
+        }
+
+        private string GenerateOtp()
+        {
+            var random = new Random();
+            return random.Next(100000, 999999).ToString();
+        }
+
+        public async Task<AuthResponse> VerifyEmailAsync(VerifyEmailRequest request)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "User not found",
+                        Code = "USER_NOT_FOUND"
+                    };
+                }
+
+                if (user.EmailVerified)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Email already verified",
+                        Code = "ALREADY_VERIFIED"
+                    };
+                }
+
+                // Check for bypass code
+                if (request.Otp == BYPASS_OTP)
+                {
+                    _logger.LogInformation($"Bypass OTP used for {request.Email}");
+                    
+                    // Activate user
+                    user.EmailVerified = true;
+                    user.Status = UserStatus.Active;
+                    await _userManager.UpdateAsync(user);
+
+                    // Send welcome email
+                    await _emailService.SendWelcomeEmailAsync(user.Email!, $"{user.FirstName} {user.LastName}".Trim());
+
+                    return new AuthResponse
+                    {
+                        Success = true,
+                        Message = "Email verified successfully! You can now log in.",
+                        Code = "EMAIL_VERIFIED"
+                    };
+                }
+
+                // Verify OTP from database
+                var otpToken = await _context.EmailVerificationTokens
+                    .Where(t => t.Email == request.Email && t.Token == request.Otp && !t.IsUsed)
+                    .OrderByDescending(t => t.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (otpToken == null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Invalid OTP code",
+                        Code = "INVALID_OTP"
+                    };
+                }
+
+                if (otpToken.ExpiresAt < DateTime.UtcNow)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "OTP code has expired. Please request a new one.",
+                        Code = "OTP_EXPIRED"
+                    };
+                }
+
+                // Mark OTP as used
+                otpToken.IsUsed = true;
+                await _context.SaveChangesAsync();
+
+                // Activate user
+                user.EmailVerified = true;
+                user.Status = UserStatus.Active;
+                await _userManager.UpdateAsync(user);
+
+                // Send welcome email
+                await _emailService.SendWelcomeEmailAsync(user.Email!, $"{user.FirstName} {user.LastName}".Trim());
+
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = "Email verified successfully! You can now log in.",
+                    Code = "EMAIL_VERIFIED"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying email");
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Internal server error",
+                    Code = "INTERNAL_ERROR"
+                };
+            }
+        }
+
+        public async Task<AuthResponse> ResendOtpAsync(ResendOtpRequest request)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "User not found",
+                        Code = "USER_NOT_FOUND"
+                    };
+                }
+
+                if (user.EmailVerified)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Email already verified",
+                        Code = "ALREADY_VERIFIED"
+                    };
+                }
+
+                // Generate new OTP
+                var otp = GenerateOtp();
+
+                // Save new OTP to database
+                var otpToken = new EmailVerificationToken
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    Email = user.Email!,
+                    Token = otp,
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                    IsUsed = false
+                };
+
+                await _context.EmailVerificationTokens.AddAsync(otpToken);
+                await _context.SaveChangesAsync();
+
+                // Send OTP email
+                var emailSent = await _emailService.SendEmailVerificationOtpAsync(
+                    user.Email!,
+                    $"{user.FirstName} {user.LastName}".Trim(),
+                    otp
+                );
+
+                if (!emailSent)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Failed to send OTP email",
+                        Code = "EMAIL_FAILED"
+                    };
+                }
+
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = $"OTP code resent successfully to {user.Email}. (Demo bypass code: {BYPASS_OTP})",
+                    Code = "OTP_RESENT"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resending OTP");
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Internal server error",
+                    Code = "INTERNAL_ERROR"
+                };
+            }
         }
     }
 }

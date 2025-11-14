@@ -57,6 +57,54 @@ namespace FirstLend.Api.Controllers
             return BadRequest(result);
         }
 
+        [HttpPost("verify-email")]
+        [ProducesResponseType(typeof(AuthResponse), 200)]
+        [ProducesResponseType(typeof(AuthResponse), 400)]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Validation error",
+                    Code = "VALIDATION_ERROR"
+                });
+            }
+
+            var result = await _authService.VerifyEmailAsync(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+        [HttpPost("resend-otp")]
+        [ProducesResponseType(typeof(AuthResponse), 200)]
+        [ProducesResponseType(typeof(AuthResponse), 400)]
+        public async Task<IActionResult> ResendOtp([FromBody] ResendOtpRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Validation error",
+                    Code = "VALIDATION_ERROR"
+                });
+            }
+
+            var result = await _authService.ResendOtpAsync(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
         [HttpPost("login")]
         [ProducesResponseType(typeof(AuthResponse), 200)]
         [ProducesResponseType(typeof(AuthResponse), 401)]

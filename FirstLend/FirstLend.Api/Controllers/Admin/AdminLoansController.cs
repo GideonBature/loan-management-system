@@ -1,3 +1,4 @@
+using System;
 using FirstLend.Application.Abstractions;
 using FirstLend.Application.Dtos.Request;
 using FirstLend.Application.Dtos.Response;
@@ -13,7 +14,7 @@ namespace FirstLend.Api.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/loans")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Super Admin,Loan Officer")]
 public class AdminLoansController : ControllerBase
 {
     private readonly ILoanService _loanService;
@@ -44,6 +45,31 @@ public class AdminLoansController : ControllerBase
             return "309" + numericPart.Substring(0, 1) + "XXXXX";
         }
         return "3091XXXXX";
+    }
+
+    private string GetApiBaseUrl()
+    {
+        var request = HttpContext?.Request;
+        if (request != null)
+        {
+            return $"{request.Scheme}://{request.Host}{request.PathBase}";
+        }
+
+        var callbackFromConfig = _configuration["Paystack:CallbackUrl"];
+        if (!string.IsNullOrEmpty(callbackFromConfig))
+        {
+            try
+            {
+                var uri = new Uri(callbackFromConfig);
+                return uri.GetLeftPart(UriPartial.Authority);
+            }
+            catch
+            {
+                // Ignore invalid URIs and fall back to default
+            }
+        }
+
+        return "http://localhost:5128";
     }
 
     /// <summary>
@@ -484,7 +510,7 @@ public class AdminLoansController : ControllerBase
             var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {paystackSecretKey}");
 
-            var callbackUrl = $"{_configuration["Frontend:BaseUrl"]}/admin/disbursement/callback";
+            var callbackUrl = $"{GetApiBaseUrl()}/api/admin/loans/{id}/disburse/verify";
             
             var paystackRequest = new
             {
@@ -695,7 +721,7 @@ public class AdminLoansController : ControllerBase
             var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {paystackSecretKey}");
 
-            var callbackUrl = $"{_configuration["Frontend:BaseUrl"]}/admin/disbursement/callback?loanId={id}";
+            var callbackUrl = $"{GetApiBaseUrl()}/api/admin/loans/{id}/disburse/verify";
             
             var paystackRequest = new
             {
@@ -758,7 +784,7 @@ public class AdminLoansController : ControllerBase
         {
             if (string.IsNullOrEmpty(reference))
             {
-                return Redirect($"{_configuration["Frontend:BaseUrl"]}/admin/disbursement?error=No payment reference");
+                return Redirect(BuildRedirectUrl("failed", "No payment reference provided"));
             }
 
             // Verify payment with Paystack
@@ -771,7 +797,7 @@ public class AdminLoansController : ControllerBase
 
             if (!response.IsSuccessStatusCode)
             {
-                return Redirect($"{_configuration["Frontend:BaseUrl"]}/admin/disbursement?error=Payment verification failed");
+                return Redirect(BuildRedirectUrl("failed", "Payment verification failed"));
             }
 
             var paystackResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseString);
@@ -791,14 +817,62 @@ public class AdminLoansController : ControllerBase
                     await _context.SaveChangesAsync();
                 }
 
-                return Redirect($"{_configuration["Frontend:BaseUrl"]}/admin/disbursement?success=Loan disbursed successfully&loanId={id}");
+                return Redirect(BuildRedirectUrl("success", "Loan disbursed successfully", id));
             }
 
-            return Redirect($"{_configuration["Frontend:BaseUrl"]}/admin/disbursement?error=Payment failed");
+            return Redirect(BuildRedirectUrl("failed", "Payment failed"));
         }
         catch (Exception ex)
         {
-            return Redirect($"{_configuration["Frontend:BaseUrl"]}/admin/disbursement?error={Uri.EscapeDataString(ex.Message)}");
+            return Redirect(BuildRedirectUrl("failed", ex.Message));
+        }
+
+        string BuildRedirectUrl(string status, string message, Guid? loanIdParam = null)
+        {
+            var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:8080";
+            var query = $"disburse_status={status}&disburse_message={Uri.EscapeDataString(message)}";
+            if (loanIdParam.HasValue)
+            {
+                query += $"&loanId={loanIdParam}";
+            }
+
+            return $"{frontendBaseUrl}/admin/disbursement?{query}";
+        }
+    }
+
+    /// <summary>
+    /// Check disbursement status (Admin only) - For frontend to check status after Paystack redirect
+    /// </summary>
+    [HttpGet("{id}/disburse/status")]
+    public async Task<IActionResult> GetDisbursementStatus(Guid id)
+    {
+        try
+        {
+            var loan = await _context.Loans
+                .Include(l => l.LoanType)
+                .FirstOrDefaultAsync(l => l.Id == id);
+
+            if (loan == null)
+            {
+                return NotFound(new { success = false, message = "Loan not found" });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    loanId = loan.Id,
+                    status = loan.Status.ToString(),
+                    isDisbursed = loan.Status == LoanStatus.active && loan.DisbursedAt.HasValue,
+                    disbursedAt = loan.DisbursedAt,
+                    amount = loan.Principal
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = "Error checking disbursement status", error = ex.Message });
         }
     }
 
