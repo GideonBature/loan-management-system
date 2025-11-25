@@ -1,0 +1,112 @@
+[
+  {
+    "Id": "b8c9a1f3-1c4a-4b29-b2d5-9c2f4f1e79e1",
+    "FirstName": "John",
+    "LastName": "Doe",
+    "Email": "john.doe@email.com",
+    "UserName": "john_doe",
+    "PhoneNumber": "+2348012345678",
+    "PhotoUrl": "https://randomuser.me/api/portraits/men/1.jpg",
+    "PublicId": "usr_john_doe_001",
+    "CreatedAt": "2025-11-01T08:30:00Z"
+  },
+  {
+    "Id": "fa2e91cb-65b4-46f9-9a35-3d1ed98d9e43",
+    "FirstName": "Jane",
+    "LastName": "Smith",
+    "Email": "jane.smith@email.com",
+    "UserName": "jane_smith",
+    "PhoneNumber": "+2348023456789",
+    "PhotoUrl": "https://randomuser.me/api/portraits/women/2.jpg",
+    "PublicId": "usr_jane_smith_002",
+    "CreatedAt": "2025-11-02T09:15:00Z"
+  },
+  {
+    "Id": "e3cbf94b-6e3e-4969-bd48-f3d45e2a4b70",
+    "FirstName": "Michael",
+    "LastName": "Johnson",
+    "Email": "michael.johnson@email.com",
+    "UserName": "mike_johnson",
+    "PhoneNumber": "+2348034567890",
+    "PhotoUrl": "https://randomuser.me/api/portraits/men/3.jpg",
+    "PublicId": "usr_mike_johnson_003",
+    "CreatedAt": "2025-11-02T12:40:00Z"
+  },
+  {
+    "Id": "a2c8910f-d9b8-437b-9f7f-9a4bdb1f01a9",
+    "FirstName": "Emily",
+    "LastName": "Davis",
+    "Email": "emily.davis@email.com",
+    "UserName": "emily_davis",
+    "PhoneNumber": "+2348045678901",
+    "PhotoUrl": "https://randomuser.me/api/portraits/women/4.jpg",
+    "PublicId": "usr_emily_davis_004",
+    "CreatedAt": "2025-11-03T11:05:00Z"
+  },
+  {
+    "Id": "cbde529b-4b6e-4b9e-82ea-7b289ef5ce33",
+    "FirstName": "Daniel",
+    "LastName": "Brown",
+    "Email": "daniel.brown@email.com",
+    "UserName": "daniel_brown",
+    "PhoneNumber": "+2348056789012",
+    "PhotoUrl": "https://randomuser.me/api/portraits/men/5.jpg",
+    "PublicId": "usr_daniel_brown_005",
+    "CreatedAt": "2025-11-04T13:25:00Z"
+  },
+  {
+    "Id": "bb4151a4-b621-4b2a-83e5-8287a31efbe9",
+    "FirstName": "Grace",
+    "LastName": "Williams",
+    "Email": "grace.williams@email.com",
+    "UserName": "grace_williams",
+    "PhoneNumber": "+2348067890123",
+    "PhotoUrl": "https://randomuser.me/api/portraits/women/6.jpg",
+    "PublicId": "usr_grace_williams_006",
+    "CreatedAt": "2025-11-04T18:50:00Z"
+  },
+  {
+    "Id": "d3a6b8a0-3c1f-4e84-8e5e-bf7b9b34db0b",
+    "FirstName": "David",
+    "LastName": "Wilson",
+    "Email": "david.wilson@email.com",
+    "UserName": "david_wilson",
+    "PhoneNumber": "+2348078901234",
+    "PhotoUrl": "https://randomuser.me/api/portraits/men/7.jpg",
+    "PublicId": "usr_david_wilson_007",
+    "CreatedAt": "2025-11-05T07:10:00Z"
+  },
+  {
+    "Id": "f59a14cd-9118-4e49-9432-54b9a2c8e7e1",
+    "FirstName": "Sophia",
+    "LastName": "Anderson",
+    "Email": "sophia.anderson@email.com",
+    "UserName": "sophia_anderson",
+    "PhoneNumber": "+2348089012345",
+    "PhotoUrl": "https://randomuser.me/api/portraits/women/8.jpg",
+    "PublicId": "usr_sophia_anderson_008",
+    "CreatedAt": "2025-11-05T16:00:00Z"
+  },
+  {
+    "Id": "c71bb0f7-14b1-4967-bc92-8a4ec5bcf3b0",
+    "FirstName": "Oliver",
+    "LastName": "Thomas",
+    "Email": "oliver.thomas@email.com",
+    "UserName": "oliver_thomas",
+    "PhoneNumber": "+2348090123456",
+    "PhotoUrl": "https://randomuser.me/api/portraits/men/9.jpg",
+    "PublicId": "usr_oliver_thomas_009",
+    "CreatedAt": "2025-11-06T09:30:00Z"
+  },
+  {
+    "Id": "fe81f9d0-5213-4b8e-bd34-01fcdad176c4",
+    "FirstName": "Isabella",
+    "LastName": "Martinez",
+    "Email": "isabella.martinez@email.com",
+    "UserName": "isabella_martinez",
+    "PhoneNumber": "+2348101234567",
+    "PhotoUrl": "https://randomuser.me/api/portraits/women/10.jpg",
+    "PublicId": "usr_isabella_martinez_010",
+    "CreatedAt": "2025-11-07T10:20:00Z"
+  }
+]

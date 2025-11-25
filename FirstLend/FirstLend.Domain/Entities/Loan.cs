@@ -31,5 +31,7 @@ namespace FirstLend.Domain.Entities
 
         // Navigation properties removed - will be configured in DbContext
         public LoanType? LoanType { get; set; }
+
+        public ICollection<PaymentHistory> PaymentHistories { get; set; } = [];
     }
 }

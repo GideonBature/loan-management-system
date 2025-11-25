@@ -3,6 +3,7 @@ using System;
 using FirstLend.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstLend.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(FirstLendDbContext))]
-    partial class FirstLendDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251109133146_Few Refactorings")]
+    partial class FewRefactorings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,146 +25,36 @@ namespace FirstLend.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("FirstLend.Domain.Entities.CreditAccount", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ClosedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal?>("CreditLimit")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("CurrentBalance")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("DateOpened")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Institution")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("OpeningBalance")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("PerformanceStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("RepaymentAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CreditAccounts");
-                });
-
-            modelBuilder.Entity("FirstLend.Domain.Entities.EmailVerificationToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("EmailVerificationTokens");
-                });
-
-            modelBuilder.Entity("FirstLend.Domain.Entities.KycDocument", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DocumentType")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("DocumentUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PublicId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("KycDocuments");
-                });
-
             modelBuilder.Entity("FirstLend.Domain.Entities.Loan", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("ActivatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<decimal>("AmountDue")
                         .HasColumnType("numeric");
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<Guid>("BorrowerId")
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("BorrowerId")
+                    b.Property<string>("CreatedAt")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("DueAt")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<DateTime?>("DisbursedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("DueAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("EmploymentStatus")
+                    b.Property<string>("Frequncy")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("LoanTypeId")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("MonthlyIncome")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("NextPaymentDate")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("NextPaymentDate")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<decimal>("OutstandingBalance")
                         .HasColumnType("numeric");
@@ -176,8 +69,9 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.Property<decimal>("Rate")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("Term")
                         .HasColumnType("integer");
@@ -197,24 +91,12 @@ namespace FirstLend.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<decimal>("Interest")
                         .HasColumnType("numeric");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("MaxTermMonths")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -249,34 +131,6 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Notifications");
-                });
-
-            modelBuilder.Entity("FirstLend.Domain.Entities.PasswordResetToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UsedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PasswordResetTokens");
                 });
 
             modelBuilder.Entity("FirstLend.Domain.Entities.PaymentHistory", b =>
@@ -316,13 +170,14 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.Property<Guid>("TransactionId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LoanId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("PaymentHistories");
                 });
@@ -370,30 +225,7 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("FirstLend.Domain.Entities.UserCreditAccount", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CreditAccountId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreditAccountId");
-
-                    b.HasIndex("UserId", "CreditAccountId")
-                        .IsUnique();
-
-                    b.ToTable("UserCreditAccounts");
-                });
-
-            modelBuilder.Entity("FirstLend.Infrastructure.Identity.ApplicationUser", b =>
+            modelBuilder.Entity("FraudGuard.Infrastructure.Identity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -401,20 +233,9 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BVN")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -423,21 +244,9 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("EmailVerified")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<DateTime?>("KycVerificationDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("KycVerified")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastLoginAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -448,10 +257,6 @@ namespace FirstLend.Infrastructure.Data.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("NIN")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -470,9 +275,6 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("PhoneVerified")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("PhotoUrl")
                         .IsRequired()
                         .HasColumnType("text");
@@ -484,21 +286,15 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
-
-                    b.Property<int>("UserType")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -508,6 +304,8 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -644,44 +442,12 @@ namespace FirstLend.Infrastructure.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("FirstLend.Domain.Entities.CreditAccount", b =>
-                {
-                    b.OwnsMany("FirstLend.Domain.Entities.RepaymentEvent", "RepaymentHistory", b1 =>
-                        {
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("uuid");
-
-                            b1.Property<Guid>("CreditAccountId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Period")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Status")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("CreditAccountId");
-
-                            b1.ToTable("RepaymentEvent");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CreditAccountId");
-                        });
-
-                    b.Navigation("RepaymentHistory");
-                });
-
             modelBuilder.Entity("FirstLend.Domain.Entities.Loan", b =>
                 {
-                    b.HasOne("FirstLend.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("FirstLend.Domain.Entities.User", "Borrower")
                         .WithMany()
                         .HasForeignKey("BorrowerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("FirstLend.Domain.Entities.LoanType", "LoanType")
@@ -689,6 +455,8 @@ namespace FirstLend.Infrastructure.Data.Migrations
                         .HasForeignKey("LoanTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Borrower");
 
                     b.Navigation("LoanType");
                 });
@@ -712,18 +480,26 @@ namespace FirstLend.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Loan");
-                });
-
-            modelBuilder.Entity("FirstLend.Domain.Entities.UserCreditAccount", b =>
-                {
-                    b.HasOne("FirstLend.Domain.Entities.CreditAccount", "CreditAccount")
+                    b.HasOne("FirstLend.Domain.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("CreditAccountId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CreditAccount");
+                    b.Navigation("Loan");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FraudGuard.Infrastructure.Identity.ApplicationUser", b =>
+                {
+                    b.HasOne("FirstLend.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -737,7 +513,7 @@ namespace FirstLend.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("FirstLend.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("FraudGuard.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -746,7 +522,7 @@ namespace FirstLend.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("FirstLend.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("FraudGuard.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -761,7 +537,7 @@ namespace FirstLend.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FirstLend.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("FraudGuard.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -770,7 +546,7 @@ namespace FirstLend.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("FirstLend.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("FraudGuard.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -18,6 +18,7 @@ namespace FirstLend.Domain.Entities
         public decimal Interest { get; set; }
         public string Method { get; set; } = "";
         public string Status { get; set; } = "";
+        public string DueAt { get; set; } = "";
         public string CreatedAt { get; set; } = "";
 
 

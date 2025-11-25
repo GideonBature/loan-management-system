@@ -1,0 +1,17 @@
+[
+  {
+    "Id": "c3f84f7a-9d2b-4b3f-9a1a-12b4e9a85e31",
+    "Name": "Personal Loan",
+    "Interest": 12.5
+  },
+  {
+    "Id": "a1b7d3c2-5e4f-4a2b-9f81-77e6f9b4c9a8",
+    "Name": "Business Loan",
+    "Interest": 15.75
+  },
+  {
+    "Id": "f9d6a2e5-3c44-4f2b-b3e8-1a2f5d8c7b19",
+    "Name": "Mortgage Loan",
+    "Interest": 9.2
+  }
+]

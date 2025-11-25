@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FirstLend.Domain.Entities;
 using FirstLend.Infrastructure.Data;
 using FirstLend.Infrastructure.Identity;
 using FirstLend.Domain.Entities;
